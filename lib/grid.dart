@@ -1,14 +1,27 @@
 import 'dart:math';
-
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'cell.dart';
 import 'game_config.dart';
+import 'my_stack.dart';
 import 'main.dart';
 
+class GridIndex {
+  int row = 0;
+  int column = 0;
+
+  GridIndex(this.row, this.column);
+}
+
 class Grid extends PositionComponent with HasGameRef<SnakeGame> {
-  List<List<Cell>> board = List.generate(GameConfig.rows, (_) {
-    return List.generate(GameConfig.columns, (_) => EmptyCell(0, 0));
+  List<List<MyStack<Cell>>> board = List.generate(GameConfig.rows, (row) {
+    return List.generate(GameConfig.columns, (column) {
+      {
+        var stack = MyStack<Cell>();
+        stack.push(EmptyCell(row, column));
+        return stack;
+      }
+    });
   });
 
   Grid();
@@ -19,34 +32,17 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
 
     // Vertical borders
     for (int row = 0; row < GameConfig.rows; row++) {
-      board[row][0] = BorderCell(row, 0, row);
-      board[row][GameConfig.columns - 1] =
-          BorderCell(row, GameConfig.columns - 1, row);
+      addCell(BorderCell(row, 0, row));
+      addCell(BorderCell(row, GameConfig.columns - 1, row));
     }
     // Horizontal borders
     for (int column = 1; column < GameConfig.columns - 1; column++) {
-      board[0][column] = BorderCell(0, column, column);
-      board[GameConfig.rows - 1][column] =
-          BorderCell(GameConfig.rows - 1, column, column);
-    }
-
-    // Empty cells
-    for (int row = 1; row < GameConfig.rows - 1; row++) {
-      for (int column = 1; column < GameConfig.columns - 1; column++) {
-        board[row][column] = EmptyCell(row, column);
-      }
+      addCell(BorderCell(0, column, column));
+      addCell(BorderCell(GameConfig.rows - 1, column, column));
     }
 
     // Snake
-    List<Cell> snake = <Cell>[];
-    snake.add(SnakeHeadCell(5, 5));
-    addCell(snake[0]);
-
-    // Random apple
-    var random = Random();
-    var randomRow = 1 + random.nextInt(GameConfig.rows - 2);
-    var randomColumn = 1 + random.nextInt(GameConfig.columns - 2);
-    board[randomRow][randomColumn] = AppleCell(randomRow, randomColumn);
+    addCell(SnakeHeadCell(5, 5));
 
     // Obstacles
     addCell(BorderCell(2, 6, 0));
@@ -57,22 +53,40 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
     addCell(BorderCell(5, 4, 0));
     addCell(BorderCell(4, 2, 0));
     addCell(BorderCell(4, 6, 0));
+
+    // Random apple
+    addRandomApple();
   }
 
   void addCell(Cell cell) {
-    board[cell.row][cell.column] = cell;
+    board[cell.row][cell.column].push(cell);
+  }
+
+  void addRandomApple() {
+    List<GridIndex> places = <GridIndex>[];
+    for (int row = 1; row < GameConfig.rows - 1; row++) {
+      for (int column = 1; column < GameConfig.columns - 1; column++) {
+        if (board[row][column].peek() is EmptyCell) {
+          places.add(GridIndex(row, column));
+        }
+      }
+    }
+    var random = Random();
+    var randomIndex = random.nextInt(places.length);
+    var randomPlace = places[randomIndex];
+    addCell(AppleCell(randomPlace.row, randomPlace.column));
   }
 
   @override
   void update(double dt) {
     super.update(dt);
 
-    int snakeHeadRow = 0;
-    int snakeHeadColumn = 0;
+    int snakeHeadRow = 8;
+    int snakeHeadColumn = 8;
 
     for (int row = 1; row < GameConfig.rows - 1; row++) {
       for (int column = 1; column < GameConfig.columns - 1; column++) {
-        if (board[row][column] is SnakeHeadCell) {
+        if (board[row][column].peek() is SnakeHeadCell) {
           snakeHeadRow = row;
           snakeHeadColumn = column;
         }
@@ -80,14 +94,14 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
     }
 
     // Smart snake logic
-    var snake = board[snakeHeadRow][snakeHeadColumn] as SnakeHeadCell;
+    var snake = board[snakeHeadRow][snakeHeadColumn].peek() as SnakeHeadCell;
 
     var random = Random();
 
     if (snake.isGoingToUp()) {
-      var up = board[snakeHeadRow - 1][snakeHeadColumn];
-      var left = board[snakeHeadRow][snakeHeadColumn - 1];
-      var right = board[snakeHeadRow][snakeHeadColumn + 1];
+      var up = board[snakeHeadRow - 1][snakeHeadColumn].peek();
+      var left = board[snakeHeadRow][snakeHeadColumn - 1].peek();
+      var right = board[snakeHeadRow][snakeHeadColumn + 1].peek();
       if (up is BorderCell) {
         if (left is EmptyCell && right is EmptyCell) {
           if (random.nextBool()) {
@@ -106,9 +120,9 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
         }
       }
     } else if (snake.isGoingToDown()) {
-      var down = board[snakeHeadRow + 1][snakeHeadColumn];
-      var left = board[snakeHeadRow][snakeHeadColumn - 1];
-      var right = board[snakeHeadRow][snakeHeadColumn + 1];
+      var down = board[snakeHeadRow + 1][snakeHeadColumn].peek();
+      var left = board[snakeHeadRow][snakeHeadColumn - 1].peek();
+      var right = board[snakeHeadRow][snakeHeadColumn + 1].peek();
       if (down is BorderCell) {
         if (left is EmptyCell && right is EmptyCell) {
           if (random.nextBool()) {
@@ -127,9 +141,9 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
         }
       }
     } else if (snake.isGoingToLeft()) {
-      var left = board[snakeHeadRow][snakeHeadColumn - 1];
-      var up = board[snakeHeadRow - 1][snakeHeadColumn];
-      var down = board[snakeHeadRow + 1][snakeHeadColumn];
+      var left = board[snakeHeadRow][snakeHeadColumn - 1].peek();
+      var up = board[snakeHeadRow - 1][snakeHeadColumn].peek();
+      var down = board[snakeHeadRow + 1][snakeHeadColumn].peek();
       if (left is BorderCell) {
         if (up is EmptyCell && down is EmptyCell) {
           if (random.nextBool()) {
@@ -148,9 +162,9 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
         }
       }
     } else if (snake.isGoingToRight()) {
-      var right = board[snakeHeadRow][snakeHeadColumn + 1];
-      var up = board[snakeHeadRow - 1][snakeHeadColumn];
-      var down = board[snakeHeadRow + 1][snakeHeadColumn];
+      var right = board[snakeHeadRow][snakeHeadColumn + 1].peek();
+      var up = board[snakeHeadRow - 1][snakeHeadColumn].peek();
+      var down = board[snakeHeadRow + 1][snakeHeadColumn].peek();
       if (right is BorderCell) {
         if (up is EmptyCell && down is EmptyCell) {
           if (random.nextBool()) {
@@ -172,25 +186,22 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
 
     // Smart snake logic
 
-    board[snakeHeadRow][snakeHeadColumn].update(dt);
-    var newRow = board[snakeHeadRow][snakeHeadColumn].row;
-    var newColumn = board[snakeHeadRow][snakeHeadColumn].column;
+    board[snakeHeadRow][snakeHeadColumn].peek().update(dt);
+    var newRow = board[snakeHeadRow][snakeHeadColumn].peek().row;
+    var newColumn = board[snakeHeadRow][snakeHeadColumn].peek().column;
 
     if (board[newRow][newColumn] is EmptyCell) {
 
     }
 
-
-    board[newRow][newColumn] = board[snakeHeadRow][snakeHeadColumn];
-    board[snakeHeadRow][snakeHeadColumn] =
-        EmptyCell(snakeHeadRow, snakeHeadColumn);
+    board[newRow][newColumn].push(board[snakeHeadRow][snakeHeadColumn].pop());
   }
 
   @override
   void render(Canvas canvas) {
     for (int row = 0; row < GameConfig.rows; row++) {
       for (int column = 0; column < GameConfig.columns; column++) {
-        board[row][column].render(canvas);
+        board[row][column].peek().render(canvas);
       }
     }
 

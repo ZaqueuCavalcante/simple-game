@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'game_config.dart';
 import 'main.dart';
 
+mixin SnakePushable {}
+
 class Cell extends PositionComponent with HasGameRef<SnakeGame> {
   int row = 0;
   int column = 0;
@@ -59,17 +61,17 @@ class BorderCell extends Cell {
   }
 }
 
-class EmptyCell extends Cell {
+class EmptyCell extends Cell with SnakePushable {
   EmptyCell(int row, int column) : super(row, column, Colors.grey);
 }
 
-class AppleCell extends Cell {
+class AppleCell extends Cell with SnakePushable {
   AppleCell(int row, int column) : super(row, column, Colors.red);
 }
 
 class SnakeHeadCell extends Cell {
   int vx = 0;
-  int vy = -1;
+  int vy = 1;
 
   SnakeHeadCell(int row, int column) : super(row, column, Colors.greenAccent);
 
@@ -77,6 +79,7 @@ class SnakeHeadCell extends Cell {
     return this.row == row && this.column == column;
   }
 
+  bool isParked() => vx == 0 && vy == 0;
   bool isGoingToLeft() => vx == -1;
   bool isGoingToRight() => vx == 1;
   bool isGoingToUp() => vy == -1;
@@ -87,49 +90,11 @@ class SnakeHeadCell extends Cell {
   void goToUp() { vx = 0; vy = -1; }
   void goToDown() { vx = 0; vy = 1; }
 
-  void circleMoveLogic() {
-    if (isOn(1, 1)) {
-      if (isGoingToLeft()) {
-        goToDown();
-      }
-      if (isGoingToUp()) {
-        goToRight();
-      }
-    }
-
-    if (isOn(1, GameConfig.columns-2)) {
-      if (isGoingToRight()) {
-        goToDown();
-      }
-      if (isGoingToUp()) {
-        goToLeft();
-      }
-    }
-
-    if (isOn(GameConfig.rows-2, GameConfig.columns-2)) {
-      if (isGoingToDown()) {
-        goToLeft();
-      }
-      if (isGoingToRight()) {
-        goToUp();
-      }
-    }
-
-    if (isOn(GameConfig.rows-2, 1)) {
-      if (isGoingToLeft()) {
-        goToUp();
-      }
-      if (isGoingToDown()) {
-        goToRight();
-      }
-    }
-  }
-
   @override
   void update(double dt) {
     super.update(dt);
 
-    print('row=${row}, column=${column} --- vx=${vx}, vy=${vy}');
+    print('row=$row, column=$column --- vx=$vx, vy=$vy');
 
     row = row + vy;
     column = column + vx;
@@ -142,12 +107,24 @@ class SnakeHeadCell extends Cell {
     var x = (column + 0.50) * GameConfig.cellSize;
     var y = (row + 0.50) * GameConfig.cellSize;
 
-    var path = Path();
-    path.moveTo(x + vx*GameConfig.cellSize/2, y + vy*GameConfig.cellSize/2);
-    path.lineTo(x + vy*GameConfig.cellSize/4, y + vx*GameConfig.cellSize/4);
-    path.lineTo(x - vy*GameConfig.cellSize/4, y - vx*GameConfig.cellSize/4);
-    path.close();
-    canvas.drawPath(path, Paint()..color = Colors.black);
+    if (isParked()) {
+      var path = Path();
+      path.moveTo(x + GameConfig.cellSize/3, y);
+
+      path.lineTo(x, y + GameConfig.cellSize/3);
+      path.lineTo(x - GameConfig.cellSize/3, y);
+      path.lineTo(x, y - GameConfig.cellSize/3);
+
+      path.close();
+      canvas.drawPath(path, Paint()..color = Colors.black);
+    } else {
+      var path = Path();
+      path.moveTo(x + vx*GameConfig.cellSize/2, y + vy*GameConfig.cellSize/2);
+      path.lineTo(x + vy*GameConfig.cellSize/4, y + vx*GameConfig.cellSize/4);
+      path.lineTo(x - vy*GameConfig.cellSize/4, y - vx*GameConfig.cellSize/4);
+      path.close();
+      canvas.drawPath(path, Paint()..color = Colors.black);
+    }
   }
 }
 

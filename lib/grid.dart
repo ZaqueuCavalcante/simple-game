@@ -45,6 +45,17 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
     addCell(SnakeHeadCell(5, 5));
 
     // Obstacles
+    // addObstacles();
+
+    // Random apple
+    addRandomApple();
+  }
+
+  void addCell(Cell cell) {
+    board[cell.row][cell.column].push(cell);
+  }
+
+  void addObstacles() {
     addCell(BorderCell(2, 6, 0));
     addCell(BorderCell(3, 5, 0));
     addCell(BorderCell(2, 2, 0));
@@ -53,13 +64,6 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
     addCell(BorderCell(5, 4, 0));
     addCell(BorderCell(4, 2, 0));
     addCell(BorderCell(4, 6, 0));
-
-    // Random apple
-    addRandomApple();
-  }
-
-  void addCell(Cell cell) {
-    board[cell.row][cell.column].push(cell);
   }
 
   void addRandomApple() {
@@ -81,20 +85,40 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
   void update(double dt) {
     super.update(dt);
 
-    int snakeHeadRow = 8;
-    int snakeHeadColumn = 8;
+    int snakeHeadRow = 0;
+    int snakeHeadColumn = 0;
+
+    int foodRow = 0;
+    int foodColumn = 0;
 
     for (int row = 1; row < GameConfig.rows - 1; row++) {
       for (int column = 1; column < GameConfig.columns - 1; column++) {
         if (board[row][column].peek() is SnakeHeadCell) {
           snakeHeadRow = row;
           snakeHeadColumn = column;
+        } else if (board[row][column].peek() is AppleCell) {
+          foodRow = row;
+          foodColumn = column;
         }
       }
     }
 
     // Smart snake logic
     var snake = board[snakeHeadRow][snakeHeadColumn].peek() as SnakeHeadCell;
+
+    // Track food logic
+    if (GameConfig.trackFood) {
+      if (foodRow > snakeHeadRow) {
+        snake.goToDown();
+      } else if (foodRow < snakeHeadRow) {
+        snake.goToUp();
+      } else if (foodColumn > snakeHeadColumn) {
+        snake.goToRight();
+      } else if (foodColumn < snakeHeadColumn) {
+        snake.goToLeft();
+      }
+    }
+    // Track food logic
 
     var random = Random();
 
@@ -103,16 +127,16 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var left = board[snakeHeadRow][snakeHeadColumn - 1].peek();
       var right = board[snakeHeadRow][snakeHeadColumn + 1].peek();
       if (up is BorderCell) {
-        if (left is EmptyCell && right is EmptyCell) {
+        if (left is SnakePushable && right is SnakePushable) {
           if (random.nextBool()) {
             snake.goToLeft();
           } else {
             snake.goToRight();
           }
         } else {
-          if (left is EmptyCell) {
+          if (left is SnakePushable) {
             snake.goToLeft();
-          } else if (right is EmptyCell) {
+          } else if (right is SnakePushable) {
             snake.goToRight();
           } else {
             snake.goToDown();
@@ -124,16 +148,16 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var left = board[snakeHeadRow][snakeHeadColumn - 1].peek();
       var right = board[snakeHeadRow][snakeHeadColumn + 1].peek();
       if (down is BorderCell) {
-        if (left is EmptyCell && right is EmptyCell) {
+        if (left is SnakePushable && right is SnakePushable) {
           if (random.nextBool()) {
             snake.goToLeft();
           } else {
             snake.goToRight();
           }
         } else {
-          if (left is EmptyCell) {
+          if (left is SnakePushable) {
             snake.goToLeft();
-          } else if (right is EmptyCell) {
+          } else if (right is SnakePushable) {
             snake.goToRight();
           } else {
             snake.goToUp();
@@ -145,16 +169,16 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var up = board[snakeHeadRow - 1][snakeHeadColumn].peek();
       var down = board[snakeHeadRow + 1][snakeHeadColumn].peek();
       if (left is BorderCell) {
-        if (up is EmptyCell && down is EmptyCell) {
+        if (up is SnakePushable && down is SnakePushable) {
           if (random.nextBool()) {
             snake.goToUp();
           } else {
             snake.goToDown();
           }
         } else {
-          if (up is EmptyCell) {
+          if (up is SnakePushable) {
             snake.goToUp();
-          } else if (down is EmptyCell) {
+          } else if (down is SnakePushable) {
             snake.goToDown();
           } else {
             snake.goToRight();
@@ -166,16 +190,16 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var up = board[snakeHeadRow - 1][snakeHeadColumn].peek();
       var down = board[snakeHeadRow + 1][snakeHeadColumn].peek();
       if (right is BorderCell) {
-        if (up is EmptyCell && down is EmptyCell) {
+        if (up is SnakePushable && down is SnakePushable) {
           if (random.nextBool()) {
             snake.goToUp();
           } else {
             snake.goToDown();
           }
         } else {
-          if (up is EmptyCell) {
+          if (up is SnakePushable) {
             snake.goToUp();
-          } else if (down is EmptyCell) {
+          } else if (down is SnakePushable) {
             snake.goToDown();
           } else {
             snake.goToLeft();
@@ -183,18 +207,24 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
         }
       }
     }
-
     // Smart snake logic
 
     board[snakeHeadRow][snakeHeadColumn].peek().update(dt);
     var newRow = board[snakeHeadRow][snakeHeadColumn].peek().row;
     var newColumn = board[snakeHeadRow][snakeHeadColumn].peek().column;
 
-    if (board[newRow][newColumn] is EmptyCell) {
+    if (board[newRow][newColumn].peek() is EmptyCell) {
+      board[newRow][newColumn].push(board[snakeHeadRow][snakeHeadColumn].pop());
+    } else if (board[newRow][newColumn].peek() is AppleCell) {
+      board[newRow][newColumn].pop();
 
+      if (GameConfig.pushObstacleOnEatFood) {
+        addCell(BorderCell(newRow, newColumn, 1));
+      }
+
+      board[newRow][newColumn].push(board[snakeHeadRow][snakeHeadColumn].pop());
+      addRandomApple();
     }
-
-    board[newRow][newColumn].push(board[snakeHeadRow][snakeHeadColumn].pop());
   }
 
   @override

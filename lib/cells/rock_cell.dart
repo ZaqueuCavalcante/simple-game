@@ -1,14 +1,21 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
+import 'package:snake_game/game_config.dart';
 
-import '../game_config.dart';
 import 'cell.dart';
 
-class BorderCell extends Cell with Unpushable {
-  String text;
+class RockCell extends Cell with Unpushable {
+  int collisions = 0;
 
-  BorderCell(int row, int column, {this.text = ''})
-      : super(row, column, Colors.yellow);
+  RockCell(int row, int column) : super(row, column, Colors.brown);
+
+  bool isDead() {
+    return collisions > GameConfig.rockMaxCollisions;
+  }
+
+  void saveCollision() {
+    collisions++;
+  }
 
   @override
   void render(Canvas canvas) {
@@ -19,13 +26,13 @@ class BorderCell extends Cell with Unpushable {
 
     TextPaint textPaint = TextPaint(
       style: const TextStyle(
-        color: Colors.black,
+        color: Colors.white,
         fontSize: 20.0,
         fontWeight: FontWeight.bold,
         fontFamily: 'Awesome Font',
       ),
     );
 
-    textPaint.render(canvas, text, Vector2(x, y));
+    textPaint.render(canvas, collisions.toString(), Vector2(x, y));
   }
 }

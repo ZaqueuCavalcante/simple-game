@@ -6,6 +6,7 @@ import '../cells/border_cell.dart';
 import '../cells/cell.dart';
 import '../cells/empty_cell.dart';
 import '../cells/player_cell.dart';
+import '../cells/rock_cell.dart';
 import '../game_config.dart';
 import '../my_stack.dart';
 import '../main.dart';
@@ -66,7 +67,7 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
   }
 
   void addObstacle(int row, int column) {
-    board[row][column].push(BorderCell(row, column));
+    board[row][column].push(RockCell(row, column));
   }
 
   void addInitialObstacles() {
@@ -142,7 +143,9 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var left = cellAt(playerRow, playerColumn - 1);
       var right = cellAt(playerRow, playerColumn + 1);
       var down = cellAt(playerRow + 1, playerColumn);
-      if (up is BorderCell) {
+      if (up is Unpushable) {
+        if (up is RockCell) { up.saveCollision(); }
+
         if (left is Pushable && right is Pushable) {
           player.goToLeftOrRightRandomly();
         } else {
@@ -162,7 +165,9 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var left = cellAt(playerRow, playerColumn - 1);
       var right = cellAt(playerRow, playerColumn + 1);
       var up = cellAt(playerRow - 1, playerColumn);
-      if (down is BorderCell) {
+      if (down is Unpushable) {
+        if (down is RockCell) { down.saveCollision(); }
+
         if (left is Pushable && right is Pushable) {
           player.goToLeftOrRightRandomly();
         } else {
@@ -182,7 +187,9 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var up = cellAt(playerRow - 1, playerColumn);
       var down = cellAt(playerRow + 1, playerColumn);
       var right = cellAt(playerRow, playerColumn + 1);
-      if (left is BorderCell) {
+      if (left is Unpushable) {
+        if (left is RockCell) { left.saveCollision(); }
+
         if (up is Pushable && down is Pushable) {
           player.goToUpOrDownRandomly();
         } else {
@@ -202,7 +209,9 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var up = cellAt(playerRow - 1, playerColumn);
       var down = cellAt(playerRow + 1, playerColumn);
       var left = cellAt(playerRow, playerColumn - 1);
-      if (right is BorderCell) {
+      if (right is Unpushable) {
+        if (right is RockCell) { right.saveCollision(); }
+
         if (up is Pushable && down is Pushable) {
           player.goToUpOrDownRandomly();
         } else {
@@ -235,11 +244,30 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       board[newRow][newColumn].pop();
 
       if (GameConfig.pushObstacleOnEatApple) {
-        addCell(BorderCell(newRow, newColumn, text: 'X'));
+        addCell(RockCell(newRow, newColumn));
       }
 
       board[newRow][newColumn].push(board[oldRow][oldColumn].pop());
       addRandomApple();
+    }
+  }
+
+  void updateApple(double dt) {
+    apple.update(dt);
+    if (apple.isDead()) {
+      board[apple.row][apple.column].pop();
+      addRandomApple();
+    }
+  }
+
+  void updateRocks() {
+    for (int row = 1; row < GameConfig.rows-1; row++) {
+      for (int column = 1; column < GameConfig.columns-1; column++) {
+        var cell = cellAt(row, column);
+        if (cell is RockCell && cell.isDead()) {
+          board[row][column].pop();
+        }
+      }
     }
   }
 
@@ -257,11 +285,10 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
     updatePlayer(dt);
 
     // Update apple
-    apple.update(dt);
-    if (apple.isDead()) {
-      board[apple.row][apple.column].pop();
-      addRandomApple();
-    }
+    updateApple(dt);
+
+    // Update rocks
+    updateRocks();
   }
 
   @override

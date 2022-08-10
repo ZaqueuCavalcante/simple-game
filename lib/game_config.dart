@@ -8,4 +8,6 @@ class GameConfig {
 
   static const bool showBordersIndex = true;
   static const bool addInitialObstacles = false;
+
+  static const int rockMaxCollisions = 9;
 }

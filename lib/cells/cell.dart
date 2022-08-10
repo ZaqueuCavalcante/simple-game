@@ -34,3 +34,5 @@ class Cell extends PositionComponent with HasGameRef<SnakeGame> {
 }
 
 mixin Pushable {}
+
+mixin Unpushable {}

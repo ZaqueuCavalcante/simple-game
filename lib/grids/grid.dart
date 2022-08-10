@@ -141,6 +141,7 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var up = cellAt(playerRow - 1, playerColumn);
       var left = cellAt(playerRow, playerColumn - 1);
       var right = cellAt(playerRow, playerColumn + 1);
+      var down = cellAt(playerRow + 1, playerColumn);
       if (up is BorderCell) {
         if (left is Pushable && right is Pushable) {
           player.goToLeftOrRightRandomly();
@@ -149,8 +150,10 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
             player.goToLeft();
           } else if (right is Pushable) {
             player.goToRight();
-          } else {
+          } else if (down is Pushable) {
             player.goToDown();
+          } else {
+            player.park();
           }
         }
       }
@@ -158,6 +161,7 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var down = cellAt(playerRow + 1, playerColumn);
       var left = cellAt(playerRow, playerColumn - 1);
       var right = cellAt(playerRow, playerColumn + 1);
+      var up = cellAt(playerRow - 1, playerColumn);
       if (down is BorderCell) {
         if (left is Pushable && right is Pushable) {
           player.goToLeftOrRightRandomly();
@@ -166,8 +170,10 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
             player.goToLeft();
           } else if (right is Pushable) {
             player.goToRight();
-          } else {
+          } else if (up is Pushable) {
             player.goToUp();
+          } else {
+            player.park();
           }
         }
       }
@@ -175,6 +181,7 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var left = cellAt(playerRow, playerColumn - 1);
       var up = cellAt(playerRow - 1, playerColumn);
       var down = cellAt(playerRow + 1, playerColumn);
+      var right = cellAt(playerRow, playerColumn + 1);
       if (left is BorderCell) {
         if (up is Pushable && down is Pushable) {
           player.goToUpOrDownRandomly();
@@ -183,8 +190,10 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
             player.goToUp();
           } else if (down is Pushable) {
             player.goToDown();
-          } else {
+          } else if (right is Pushable) {
             player.goToRight();
+          } else {
+            player.park();
           }
         }
       }
@@ -192,6 +201,7 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var right = cellAt(playerRow, playerColumn + 1);
       var up = cellAt(playerRow - 1, playerColumn);
       var down = cellAt(playerRow + 1, playerColumn);
+      var left = cellAt(playerRow, playerColumn - 1);
       if (right is BorderCell) {
         if (up is Pushable && down is Pushable) {
           player.goToUpOrDownRandomly();
@@ -200,8 +210,10 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
             player.goToUp();
           } else if (down is Pushable) {
             player.goToDown();
-          } else {
+          } else if (left is Pushable) {
             player.goToLeft();
+          } else {
+            player.park();
           }
         }
       }
@@ -243,6 +255,13 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
 
     // Update player
     updatePlayer(dt);
+
+    // Update apple
+    apple.update(dt);
+    if (apple.isDead()) {
+      board[apple.row][apple.column].pop();
+      addRandomApple();
+    }
   }
 
   @override

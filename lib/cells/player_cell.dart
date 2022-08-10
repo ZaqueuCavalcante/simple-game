@@ -25,6 +25,11 @@ class PlayerCell extends Cell {
 
   bool isGoingToDown() => vy == 1;
 
+  void park() {
+    vx = 0;
+    vy = 0;
+  }
+
   void goToLeft() {
     vx = -1;
     vy = 0;

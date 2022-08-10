@@ -1,10 +1,11 @@
-import 'package:flame/components.dart';
-
 class GameConfig {
-  static const rows = 7;
-  static const columns = 10;
-  static const cellSize = 40.00;
+  static const int rows = 10;
+  static const int columns = 10;
+  static const double cellSize = 40.00;
 
-  static const trackFood = true;
-  static const pushObstacleOnEatFood = false;
+  static const bool useSimpleAppleTracker = true;
+  static const bool pushObstacleOnEatApple = true;
+
+  static const bool showBordersIndex = true;
+  static const bool addInitialObstacles = false;
 }

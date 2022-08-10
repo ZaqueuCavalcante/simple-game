@@ -1,29 +1,27 @@
 import "dart:collection" show Queue;
 
 class MyStack<T> {
-  final Queue<T> _underlyingQueue;
+  final Queue<T> _queue;
 
-  MyStack() : _underlyingQueue = Queue<T>();
+  MyStack() : _queue = Queue<T>();
 
-  int get length => _underlyingQueue.length;
-  bool get isEmpty => _underlyingQueue.isEmpty;
-  bool get isNotEmpty => _underlyingQueue.isNotEmpty;
+  int get length => _queue.length;
+  bool get isEmpty => _queue.isEmpty;
+  bool get isNotEmpty => _queue.isNotEmpty;
 
-  void clear() => _underlyingQueue.clear();
+  void push(final T element) => _queue.addLast(element);
 
   T peek() {
     if (isEmpty) {
       throw StateError("Cannot peek() on empty stack.");
     }
-    return _underlyingQueue.last;
+    return _queue.last;
   }
 
   T pop() {
     if (isEmpty) {
       throw StateError("Cannot pop() on empty stack.");
     }
-    return _underlyingQueue.removeLast();
+    return _queue.removeLast();
   }
-
-  void push(final T element) => _underlyingQueue.addLast(element);
 }

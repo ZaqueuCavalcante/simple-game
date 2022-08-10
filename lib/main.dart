@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'grid.dart';
+import 'grids/grid.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

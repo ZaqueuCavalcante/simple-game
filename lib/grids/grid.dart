@@ -10,7 +10,9 @@ import '../cells/rock_cell.dart';
 import '../game_config.dart';
 import '../my_stack.dart';
 import '../main.dart';
+import '../scoreboard.dart';
 import 'cell_index.dart';
+import 'package:collection/collection.dart';
 
 class Grid extends PositionComponent with HasGameRef<SnakeGame> {
   List<List<MyStack<Cell>>> board = List.generate(GameConfig.rows, (row) {
@@ -23,8 +25,10 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
     });
   });
 
-  PlayerCell player = PlayerCell(5, 5);
+  PlayerCell player = PlayerCell(3, 3);
   AppleCell apple = AppleCell(0, 0);
+
+  Scoreboard scoreboard = Scoreboard();
 
   Grid();
 
@@ -144,7 +148,9 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var right = cellAt(playerRow, playerColumn + 1);
       var down = cellAt(playerRow + 1, playerColumn);
       if (up is Unpushable) {
-        if (up is RockCell) { up.saveCollision(); }
+        if (up is RockCell) {
+          up.saveCollision();
+        }
 
         if (left is Pushable && right is Pushable) {
           player.goToLeftOrRightRandomly();
@@ -166,7 +172,9 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var right = cellAt(playerRow, playerColumn + 1);
       var up = cellAt(playerRow - 1, playerColumn);
       if (down is Unpushable) {
-        if (down is RockCell) { down.saveCollision(); }
+        if (down is RockCell) {
+          down.saveCollision();
+        }
 
         if (left is Pushable && right is Pushable) {
           player.goToLeftOrRightRandomly();
@@ -188,7 +196,9 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var down = cellAt(playerRow + 1, playerColumn);
       var right = cellAt(playerRow, playerColumn + 1);
       if (left is Unpushable) {
-        if (left is RockCell) { left.saveCollision(); }
+        if (left is RockCell) {
+          left.saveCollision();
+        }
 
         if (up is Pushable && down is Pushable) {
           player.goToUpOrDownRandomly();
@@ -210,7 +220,9 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       var down = cellAt(playerRow + 1, playerColumn);
       var left = cellAt(playerRow, playerColumn - 1);
       if (right is Unpushable) {
-        if (right is RockCell) { right.saveCollision(); }
+        if (right is RockCell) {
+          right.saveCollision();
+        }
 
         if (up is Pushable && down is Pushable) {
           player.goToUpOrDownRandomly();
@@ -249,6 +261,8 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
 
       board[newRow][newColumn].push(board[oldRow][oldColumn].pop());
       addRandomApple();
+
+      scoreboard.updateScore();
     }
   }
 
@@ -261,8 +275,8 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
   }
 
   void updateRocks() {
-    for (int row = 1; row < GameConfig.rows-1; row++) {
-      for (int column = 1; column < GameConfig.columns-1; column++) {
+    for (int row = 1; row < GameConfig.rows - 1; row++) {
+      for (int column = 1; column < GameConfig.columns - 1; column++) {
         var cell = cellAt(row, column);
         if (cell is RockCell && cell.isDead()) {
           board[row][column].pop();
@@ -274,6 +288,38 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
   @override
   void update(double dt) {
     super.update(dt);
+
+    // Calculate costs
+    int playerRow = player.row;
+    int playerColumn = player.column;
+
+    int appleRow = apple.row;
+    int appleColumn = apple.column;
+
+    var up = cellAt(playerRow - 1, playerColumn);
+    var down = cellAt(playerRow + 1, playerColumn);
+    var left = cellAt(playerRow, playerColumn - 1);
+    var right = cellAt(playerRow, playerColumn + 1);
+
+    var cellsAroundPlayer = [up, down, left, right].whereType<EmptyCell>();
+
+    for (var cell in cellsAroundPlayer) {
+      cell.G = 1;
+      cell.H = (appleRow - cell.row).abs() + (appleColumn - cell.column).abs();
+    }
+
+    // Escolher qual tem menor custo F
+    PriorityQueue<EmptyCell> queue = PriorityQueue<EmptyCell>();
+    queue.addAll(cellsAroundPlayer);
+
+
+
+
+
+
+    if (player.isParked()) {
+      return;
+    }
 
     // Trackers
     useSimpleAppleTracker();
@@ -319,5 +365,7 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
               (GameConfig.rows) * GameConfig.cellSize),
           paint);
     }
+
+    scoreboard.render(canvas);
   }
 }

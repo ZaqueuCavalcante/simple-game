@@ -1,5 +1,5 @@
 class GameConfig {
-  static const int rows = 10;
+  static const int rows = 12;
   static const int columns = 10;
   static const double cellSize = 40.00;
 

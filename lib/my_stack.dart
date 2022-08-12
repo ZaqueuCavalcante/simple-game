@@ -24,4 +24,11 @@ class MyStack<T> {
     }
     return _queue.removeLast();
   }
+
+  T first() {
+    if (isEmpty) {
+      throw StateError("Cannot first() on empty stack.");
+    }
+    return _queue.first;
+  }
 }

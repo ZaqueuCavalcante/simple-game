@@ -43,7 +43,9 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
 
     addInitialObstacles();
 
-    addRandomApple();
+//    addRandomApple();
+    apple = AppleCell(1, 7);
+    addCell(apple);
   }
 
   void addVerticalBorders() {
@@ -78,12 +80,9 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
     if (GameConfig.addInitialObstacles) {
       addObstacle(2, 6);
       addObstacle(3, 5);
-      addObstacle(2, 2);
-      addObstacle(1, 8);
-      addObstacle(4, 7);
-      addObstacle(5, 4);
-      addObstacle(4, 2);
-      addObstacle(4, 6);
+      addObstacle(4, 4);
+      addObstacle(5, 3);
+      addObstacle(6, 2);
     }
   }
 
@@ -104,6 +103,10 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
 
   Cell cellAt(int row, int column) {
     return board[row][column].peek();
+  }
+
+  Cell cellAtFirst(int row, int column) {
+    return board[row][column].first();
   }
 
   void useSimpleAppleTracker() {
@@ -290,28 +293,74 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
     super.update(dt);
 
     // Calculate costs
+    for (int row = 1; row < GameConfig.rows - 1; row++) {
+      for (int column = 1; column < GameConfig.columns - 1; column++) {
+        var cell = cellAtFirst(row, column) as EmptyCell;
+        cell.resetCosts();
+      }
+    }
+
     int playerRow = player.row;
     int playerColumn = player.column;
 
     int appleRow = apple.row;
     int appleColumn = apple.column;
 
-    var up = cellAt(playerRow - 1, playerColumn);
-    var down = cellAt(playerRow + 1, playerColumn);
-    var left = cellAt(playerRow, playerColumn - 1);
-    var right = cellAt(playerRow, playerColumn + 1);
+    var startCell = board[playerRow][playerColumn].first() as EmptyCell;
+    var endCell = board[appleRow][appleColumn].first() as EmptyCell;
 
-    var cellsAroundPlayer = [up, down, left, right].whereType<EmptyCell>();
+    var openedList = PriorityQueue<EmptyCell>();
+    var closedList = PriorityQueue<EmptyCell>();
 
-    for (var cell in cellsAroundPlayer) {
-      cell.G = 1;
-      cell.H = (appleRow - cell.row).abs() + (appleColumn - cell.column).abs();
+    openedList.add(startCell);
+
+    while (true) {
+      if (openedList.isEmpty) {
+        var x = 10;
+        break;
+      }
+
+      var currentCell = openedList.removeFirst();
+      closedList.add(currentCell);
+
+      if (currentCell == endCell) {
+        var x = 10;
+        break;
+      }
+
+      var up = cellAt(currentCell.row - 1, currentCell.column);
+      var down = cellAt(currentCell.row + 1, currentCell.column);
+      var left = cellAt(currentCell.row, currentCell.column - 1);
+      var right = cellAt(currentCell.row, currentCell.column + 1);
+
+      List<EmptyCell> cellsAroundCurrentCell = <EmptyCell>[];
+      for (var topCell in [up, down, left, right]) {
+        if (topCell is EmptyCell) {
+          cellsAroundCurrentCell.add(topCell);
+        } else
+        if (topCell is AppleCell) {
+          cellsAroundCurrentCell.add(cellAtFirst(topCell.row, topCell.column) as EmptyCell);
+        }
+      }
+
+      for (var cell in cellsAroundCurrentCell) {
+        if (!closedList.contains(cell)) {
+          if (!openedList.contains(cell)) {
+            cell.parentCell = currentCell;
+
+            cell.G = cell.parentCell!.G + 1;
+            cell.H = (appleRow - cell.row).abs() + (appleColumn - cell.column).abs();
+
+            openedList.add(cell);
+          } else if (openedList.contains(cell) && currentCell.G + 1 < cell.G) {
+            cell.parentCell = currentCell;
+
+            cell.G = cell.parentCell!.G + 1;
+            cell.H = (appleRow - cell.row).abs() + (appleColumn - cell.column).abs();
+          }
+        }
+      }
     }
-
-    // Escolher qual tem menor custo F
-    PriorityQueue<EmptyCell> queue = PriorityQueue<EmptyCell>();
-    queue.addAll(cellsAroundPlayer);
-
 
 
 
@@ -341,7 +390,12 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
   void render(Canvas canvas) {
     for (int row = 0; row < GameConfig.rows; row++) {
       for (int column = 0; column < GameConfig.columns; column++) {
-        board[row][column].peek().render(canvas);
+
+        if (board[row][column].peek() is AppleCell) {
+          board[row][column].first().render(canvas);
+        } else {
+          board[row][column].peek().render(canvas);
+        }
       }
     }
 

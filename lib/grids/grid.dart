@@ -12,16 +12,16 @@ import '../my_stack.dart';
 import '../scoreboard.dart';
 import '../simple_game.dart';
 import 'cell_index.dart';
-import 'package:collection/collection.dart';
+import 'package:collection/collection.dart' show PriorityQueue;
+
+import 'maps.dart';
 
 class Grid extends PositionComponent with HasGameRef<SimpleGame> {
   List<List<MyStack<Cell>>> board = List.generate(GameConfig.rows, (row) {
     return List.generate(GameConfig.columns, (column) {
-      {
         var stack = MyStack<Cell>();
         stack.push(EmptyCell(row, column));
         return stack;
-      }
     });
   });
 
@@ -45,10 +45,14 @@ class Grid extends PositionComponent with HasGameRef<SimpleGame> {
 
     addInitialObstacles();
 
-   addRandomApple();
-//     apple = AppleCell(1, 7);
-//     addCell(apple);
+    addRandomApple();
   }
+
+
+
+
+
+
 
   void addVerticalBorders() {
     for (int row = 0; row < GameConfig.rows; row++) {
@@ -74,14 +78,22 @@ class Grid extends PositionComponent with HasGameRef<SimpleGame> {
 
   void addInitialObstacles() {
     if (GameConfig.addInitialObstacles) {
-      addObstacle(2, 6);
-      addObstacle(1, 6);
-      addObstacle(3, 5);
-      addObstacle(4, 4);
-      addObstacle(5, 3);
-      addObstacle(6, 2);
-      //addObstacle(6, 1);
+
+      var map = Maps().firstMap;
+
+      for (int mapRow = 0; mapRow < GameConfig.rows - 2; mapRow++) {
+        for (int mapColumn = 0; mapColumn < GameConfig.columns - 2; mapColumn++) {
+          if (map[mapRow][mapColumn]) {
+            addObstacle(mapRow+1, mapColumn+1);
+          }
+        }
+      }
     }
+  }
+
+  void addApple(int row, int column) {
+    apple = AppleCell(row, column);
+    addCell(apple);
   }
 
   void addRandomApple() {
@@ -95,8 +107,7 @@ class Grid extends PositionComponent with HasGameRef<SimpleGame> {
     }
     var randomIndex = Random().nextInt(emptyCells.length);
     var randomCell = emptyCells[randomIndex];
-    apple = AppleCell(randomCell.row, randomCell.column);
-    addCell(apple);
+    addApple(randomCell.row, randomCell.column);
   }
 
   Cell cellAt(int row, int column) {
@@ -107,14 +118,18 @@ class Grid extends PositionComponent with HasGameRef<SimpleGame> {
     return board[row][column].first();
   }
 
-  void useSimpleAppleTracker() {
+  void followTheSpiderSense() {
+    if (path.isNotEmpty) {
+      return;
+    }
+
     int playerRow = player.row;
     int playerColumn = player.column;
 
     int appleRow = apple.row;
     int appleColumn = apple.column;
 
-    if (GameConfig.useSimpleAppleTracker) {
+    if (GameConfig.followTheSpiderSenseWhenPathIsNotFound) {
       if (Random().nextBool()) {
         if (appleRow > playerRow) {
           player.goToDown();
@@ -150,17 +165,20 @@ class Grid extends PositionComponent with HasGameRef<SimpleGame> {
     int nextRow = path[1].row;
     int nextColumn = path[1].column;
 
-    if (nextRow > playerRow) {
-      player.goToDown();
-    } else if (nextRow < playerRow) {
-      player.goToUp();
-    } else if (nextColumn > playerColumn) {
-      player.goToRight();
-    } else if (nextColumn < playerColumn) {
-      player.goToLeft();
+    if (nextRow == playerRow) {
+      if (nextColumn > playerColumn) {
+        player.goToRight();
+      } else if (nextColumn < playerColumn) {
+        player.goToLeft();
+      }
+    } else {
+      if (nextRow > playerRow) {
+        player.goToDown();
+      } else if (nextRow < playerRow) {
+        player.goToUp();
+      }
     }
   }
-
 
   void useCollisionsAvoider() {
     int playerRow = player.row;
@@ -411,8 +429,8 @@ class Grid extends PositionComponent with HasGameRef<SimpleGame> {
     }
 
     // Trackers
-    //useSimpleAppleTracker();
     followPath();
+    // followTheSpiderSense();
 
     // Collisions avoider
     useCollisionsAvoider();
@@ -474,8 +492,8 @@ class Grid extends PositionComponent with HasGameRef<SimpleGame> {
         pathPaint,
       );
 
-      canvas.drawCircle(Offset(xA, yA), cellSize/12, pathPaint);
-      canvas.drawCircle(Offset(xB, yB), cellSize/12, pathPaint);
+      canvas.drawCircle(Offset(xA, yA), cellSize / 12, pathPaint);
+      canvas.drawCircle(Offset(xB, yB), cellSize / 12, pathPaint);
     }
 
     scoreboard.render(canvas);

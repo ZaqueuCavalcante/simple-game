@@ -8,7 +8,7 @@ class GameConfig {
 
   static const int updateDelayInMilliseconds = 1000;
 
-  static const bool useSimpleAppleTracker = true;
+  static const bool followTheSpiderSenseWhenPathIsNotFound = true;
   static const bool pushObstacleOnEatApple = false;
 
 

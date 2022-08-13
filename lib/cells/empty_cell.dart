@@ -16,6 +16,7 @@ class EmptyCell extends Cell with Pushable, Comparable {
   void resetCosts() {
     G = 0;
     H = 0;
+    parentCell = null;
   }
 
   @override
@@ -39,43 +40,43 @@ class EmptyCell extends Cell with Pushable, Comparable {
     textPaint.render(canvas, G.toString(), Vector2(x - delta, y + delta));
     textPaint.render(canvas, H.toString(), Vector2(x + delta, y + delta));
 
-    if (parentCell != null) {
-      var cellSize = GameConfig.cellSize;
-      var x = (column + 0.50) * cellSize;
-      var y = (row + 0.50) * cellSize;
-
-      int vx = 0;
-      int vy = 0;
-
-      if (parentCell!.column == column) {
-        vx = 0;
-        if (parentCell!.row < row) {
-          vy = -1;
-        } else {
-          vy = 1;
-        }
-      }
-
-      if (parentCell!.row == row) {
-        vy = 0;
-        if (parentCell!.column < column) {
-          vx = -1;
-        } else {
-          vx = 1;
-        }
-      }
-
-      Paint paint = Paint()
-        ..color = Colors.black
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 5.00;
-
-      var path = Path();
-      path.moveTo(x + vx * cellSize / 4, y + vy * cellSize / 4);
-      path.lineTo(x + vx * cellSize / 2, y + vy * cellSize / 2);
-      path.close();
-      canvas.drawPath(path, paint);
-    }
+    // if (parentCell != null) {
+    //   var cellSize = GameConfig.cellSize;
+    //   var x = (column + 0.50) * cellSize;
+    //   var y = (row + 0.50) * cellSize;
+    //
+    //   int vx = 0;
+    //   int vy = 0;
+    //
+    //   if (parentCell!.column == column) {
+    //     vx = 0;
+    //     if (parentCell!.row < row) {
+    //       vy = -1;
+    //     } else {
+    //       vy = 1;
+    //     }
+    //   }
+    //
+    //   if (parentCell!.row == row) {
+    //     vy = 0;
+    //     if (parentCell!.column < column) {
+    //       vx = -1;
+    //     } else {
+    //       vx = 1;
+    //     }
+    //   }
+    //
+    //   Paint paint = Paint()
+    //     ..color = Colors.black
+    //     ..style = PaintingStyle.stroke
+    //     ..strokeWidth = 5.00;
+    //
+    //   var path = Path();
+    //   path.moveTo(x + vx * cellSize / 4, y + vy * cellSize / 4);
+    //   path.lineTo(x + vx * cellSize / 2, y + vy * cellSize / 2);
+    //   path.close();
+    //   canvas.drawPath(path, paint);
+    // }
   }
 
   @override

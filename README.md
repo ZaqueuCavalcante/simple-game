@@ -1,16 +1,12 @@
-# snake_game
+# Simple Game
 
-A new snake game.
+## Game modes
+- Mode 0 = Player controls the green cell around grid to fill then with rocks
+- Mode 1 = Player can add or remove rocks while the green cell tries eat the apples
+- Mode 2 = Multiplayer versions of modes 0 and 1 (needs backend)
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## TODOS
+- [ ] Create cell selector to add then into grid
+- [ ] Create way to remove cell from grid (only rocks make sense?)
+- [ ] Add portal cells?

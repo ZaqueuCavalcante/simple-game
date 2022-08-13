@@ -1,14 +1,20 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
+import 'package:snake_game/game_config.dart';
 import 'main.dart';
 
 class Scoreboard extends PositionComponent with HasGameRef<SnakeGame> {
   int score = 0;
+  int rocks = 0;
 
   Scoreboard();
 
   void updateScore() {
     score++;
+  }
+
+  void updateRocks(int value) {
+    rocks = value;
   }
 
   @override
@@ -24,6 +30,7 @@ class Scoreboard extends PositionComponent with HasGameRef<SnakeGame> {
       ),
     );
 
-    textPaint.render(canvas, 'Score: $score', Vector2(50, 600));
+    textPaint.render(canvas, 'Score: $score', Vector2(50, 650));
+    textPaint.render(canvas, 'Rocks: $rocks / ${GameConfig.maxRocks}', Vector2(50, 720));
   }
 }

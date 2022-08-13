@@ -28,6 +28,8 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
   PlayerCell player = PlayerCell(3, 3);
   AppleCell apple = AppleCell(0, 0);
 
+  List<EmptyCell> path = <EmptyCell>[];
+
   Scoreboard scoreboard = Scoreboard();
 
   Grid();
@@ -43,9 +45,9 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
 
     addInitialObstacles();
 
-//    addRandomApple();
-    apple = AppleCell(1, 7);
-    addCell(apple);
+   addRandomApple();
+//     apple = AppleCell(1, 7);
+//     addCell(apple);
   }
 
   void addVerticalBorders() {
@@ -79,10 +81,12 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
   void addInitialObstacles() {
     if (GameConfig.addInitialObstacles) {
       addObstacle(2, 6);
+      addObstacle(1, 6);
       addObstacle(3, 5);
       addObstacle(4, 4);
       addObstacle(5, 3);
       addObstacle(6, 2);
+      //addObstacle(6, 1);
     }
   }
 
@@ -140,6 +144,29 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       }
     }
   }
+
+  void followPath() {
+    if (path.isEmpty) {
+      return;
+    }
+
+    int playerRow = player.row;
+    int playerColumn = player.column;
+
+    int nextRow = path[1].row;
+    int nextColumn = path[1].column;
+
+    if (nextRow > playerRow) {
+      player.goToDown();
+    } else if (nextRow < playerRow) {
+      player.goToUp();
+    } else if (nextColumn > playerColumn) {
+      player.goToRight();
+    } else if (nextColumn < playerColumn) {
+      player.goToLeft();
+    }
+  }
+
 
   void useCollisionsAvoider() {
     int playerRow = player.row;
@@ -278,14 +305,22 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
   }
 
   void updateRocks() {
+    int totalRocks = 0;
     for (int row = 1; row < GameConfig.rows - 1; row++) {
       for (int column = 1; column < GameConfig.columns - 1; column++) {
         var cell = cellAt(row, column);
+
+        if (cell is RockCell) {
+          totalRocks++;
+        }
+
         if (cell is RockCell && cell.isDead()) {
           board[row][column].pop();
         }
       }
     }
+
+    scoreboard.updateRocks(totalRocks);
   }
 
   @override
@@ -337,9 +372,9 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       for (var topCell in [up, down, left, right]) {
         if (topCell is EmptyCell) {
           cellsAroundCurrentCell.add(topCell);
-        } else
-        if (topCell is AppleCell) {
-          cellsAroundCurrentCell.add(cellAtFirst(topCell.row, topCell.column) as EmptyCell);
+        } else if (topCell is AppleCell) {
+          cellsAroundCurrentCell
+              .add(cellAtFirst(topCell.row, topCell.column) as EmptyCell);
         }
       }
 
@@ -349,29 +384,41 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
             cell.parentCell = currentCell;
 
             cell.G = cell.parentCell!.G + 1;
-            cell.H = (appleRow - cell.row).abs() + (appleColumn - cell.column).abs();
+            cell.H =
+                (appleRow - cell.row).abs() + (appleColumn - cell.column).abs();
 
             openedList.add(cell);
           } else if (openedList.contains(cell) && currentCell.G + 1 < cell.G) {
             cell.parentCell = currentCell;
 
             cell.G = cell.parentCell!.G + 1;
-            cell.H = (appleRow - cell.row).abs() + (appleColumn - cell.column).abs();
+            cell.H =
+                (appleRow - cell.row).abs() + (appleColumn - cell.column).abs();
           }
         }
       }
     }
 
+    path.clear();
 
-
-
+    // Make path
+    if (endCell.parentCell != null) {
+      EmptyCell? pathCell = endCell;
+      while (pathCell != startCell) {
+        path.add(pathCell!);
+        pathCell = pathCell.parentCell;
+      }
+      path.add(startCell);
+      path = path.reversed.toList();
+    }
 
     if (player.isParked()) {
       return;
     }
 
     // Trackers
-    useSimpleAppleTracker();
+    //useSimpleAppleTracker();
+    followPath();
 
     // Collisions avoider
     useCollisionsAvoider();
@@ -390,12 +437,7 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
   void render(Canvas canvas) {
     for (int row = 0; row < GameConfig.rows; row++) {
       for (int column = 0; column < GameConfig.columns; column++) {
-
-        if (board[row][column].peek() is AppleCell) {
-          board[row][column].first().render(canvas);
-        } else {
-          board[row][column].peek().render(canvas);
-        }
+        board[row][column].peek().render(canvas);
       }
     }
 
@@ -404,20 +446,42 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.00;
 
+    var cellSize = GameConfig.cellSize;
+
     for (int row = 0; row < GameConfig.rows + 1; row++) {
-      canvas.drawLine(
-          Offset(0, row * GameConfig.cellSize),
-          Offset((GameConfig.columns) * GameConfig.cellSize,
-              row * GameConfig.cellSize),
-          paint);
+      canvas.drawLine(Offset(0, row * cellSize),
+          Offset((GameConfig.columns) * cellSize, row * cellSize), paint);
     }
 
     for (int column = 0; column < GameConfig.columns + 1; column++) {
+      canvas.drawLine(Offset(column * cellSize, 0),
+          Offset(column * cellSize, (GameConfig.rows) * cellSize), paint);
+    }
+
+    // Render path
+    Paint pathPaint = Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5.00;
+
+    for (var index = 1; index < path.length - 1; index++) {
+      var cellA = path[index];
+      var cellB = path[index + 1];
+
+      var xA = (cellA.column + 0.50) * cellSize;
+      var yA = (cellA.row + 0.50) * cellSize;
+
+      var xB = (cellB.column + 0.50) * cellSize;
+      var yB = (cellB.row + 0.50) * cellSize;
+
       canvas.drawLine(
-          Offset(column * GameConfig.cellSize, 0),
-          Offset(column * GameConfig.cellSize,
-              (GameConfig.rows) * GameConfig.cellSize),
-          paint);
+        Offset(xA, yA),
+        Offset(xB, yB),
+        pathPaint,
+      );
+
+      canvas.drawCircle(Offset(xA, yA), cellSize/12, pathPaint);
+      canvas.drawCircle(Offset(xB, yB), cellSize/12, pathPaint);
     }
 
     scoreboard.render(canvas);

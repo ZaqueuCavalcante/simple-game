@@ -30,6 +30,6 @@ class SnakeGame extends FlameGame with HasTappables {
   void update(double dt) {
     super.update(dt);
 
-    sleep(const Duration(milliseconds: 5000));
+    //sleep(const Duration(milliseconds: 100));
   }
 }

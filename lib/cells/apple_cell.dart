@@ -16,39 +16,37 @@ class AppleCell extends Cell with Pushable {
   void update(double dt) {
     super.update(dt);
 
-    life = life - 0.05;
+    if (GameConfig.appleIsDeadly) {
+      life = life - GameConfig.appleLifeDiscount;
+    }
   }
 
   @override
   void render(Canvas canvas) {
     super.render(canvas);
 
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: Offset(
-          (column + 0.50) * GameConfig.cellSize,
-          (row + 0.50) * GameConfig.cellSize,
+    if (GameConfig.appleIsDeadly) {
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: Offset(x, y),
+          width: sideSize,
+          height: sideSize,
         ),
-        width: GameConfig.cellSize,
-        height: GameConfig.cellSize,
-      ),
-      Paint()
-        ..color = Colors.grey
-        ..style = PaintingStyle.fill,
-    );
+        Paint()
+          ..color = Colors.grey
+          ..style = PaintingStyle.fill,
+      );
 
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: Offset(
-          (column + 0.50) * GameConfig.cellSize,
-          (row + 0.50) * GameConfig.cellSize,
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: Offset(x, y),
+          width: life * sideSize,
+          height: life * sideSize,
         ),
-        width: life * GameConfig.cellSize,
-        height: life * GameConfig.cellSize,
-      ),
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.fill,
-    );
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.fill,
+      );
+    }
   }
 }

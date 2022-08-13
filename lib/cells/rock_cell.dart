@@ -14,25 +14,29 @@ class RockCell extends Cell with Unpushable {
   }
 
   void saveCollision() {
-    collisions++;
+    if (GameConfig.rockIsDeadly) {
+      collisions++;
+    }
   }
 
   @override
   void render(Canvas canvas) {
     super.render(canvas);
 
-    var x = (column + 0.35) * GameConfig.cellSize;
-    var y = (row + 0.25) * GameConfig.cellSize;
+    if (GameConfig.rockIsDeadly) {
+      var x = (column + 0.35) * sideSize;
+      var y = (row + 0.25) * sideSize;
 
-    TextPaint textPaint = TextPaint(
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 20.0,
-        fontWeight: FontWeight.bold,
-        fontFamily: 'Awesome Font',
-      ),
-    );
+      TextPaint textPaint = TextPaint(
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 20.0,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Awesome Font',
+        ),
+      );
 
-    textPaint.render(canvas, collisions.toString(), Vector2(x, y));
+      textPaint.render(canvas, collisions.toString(), Vector2(x, y));
+    }
   }
 }

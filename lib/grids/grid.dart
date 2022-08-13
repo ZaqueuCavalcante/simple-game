@@ -9,12 +9,12 @@ import '../cells/player_cell.dart';
 import '../cells/rock_cell.dart';
 import '../game_config.dart';
 import '../my_stack.dart';
-import '../main.dart';
 import '../scoreboard.dart';
+import '../simple_game.dart';
 import 'cell_index.dart';
 import 'package:collection/collection.dart';
 
-class Grid extends PositionComponent with HasGameRef<SnakeGame> {
+class Grid extends PositionComponent with HasGameRef<SimpleGame> {
   List<List<MyStack<Cell>>> board = List.generate(GameConfig.rows, (row) {
     return List.generate(GameConfig.columns, (column) {
       {
@@ -52,21 +52,15 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
 
   void addVerticalBorders() {
     for (int row = 0; row < GameConfig.rows; row++) {
-      var text =
-          (row == 0 || row == (GameConfig.rows - 1)) ? '' : row.toString();
-      text = (GameConfig.showBordersIndex) ? text : '';
-
-      addCell(BorderCell(row, 0, text: text));
-      addCell(BorderCell(row, GameConfig.columns - 1, text: text));
+      addCell(BorderCell(row, 0, row));
+      addCell(BorderCell(row, GameConfig.columns - 1, row));
     }
   }
 
   void addHorizontalBorders() {
     for (int column = 1; column < GameConfig.columns - 1; column++) {
-      var text = (GameConfig.showBordersIndex) ? column.toString() : '';
-
-      addCell(BorderCell(0, column, text: text));
-      addCell(BorderCell(GameConfig.rows - 1, column, text: text));
+      addCell(BorderCell(0, column, column));
+      addCell(BorderCell(GameConfig.rows - 1, column, column));
     }
   }
 
@@ -331,7 +325,7 @@ class Grid extends PositionComponent with HasGameRef<SnakeGame> {
     for (int row = 1; row < GameConfig.rows - 1; row++) {
       for (int column = 1; column < GameConfig.columns - 1; column++) {
         var cell = cellAtFirst(row, column) as EmptyCell;
-        cell.resetCosts();
+        cell.resetCostsAndParent();
       }
     }
 

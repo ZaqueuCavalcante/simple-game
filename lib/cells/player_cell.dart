@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import '../game_config.dart';
 
 import 'cell.dart';
 
@@ -16,6 +15,7 @@ class PlayerCell extends Cell with Unpushable {
   }
 
   bool isParked() => vx == 0 && vy == 0;
+
   bool isNotParked() => !isParked();
 
   bool isGoingToLeft() => vx == -1;
@@ -79,25 +79,21 @@ class PlayerCell extends Cell with Unpushable {
   void render(Canvas canvas) {
     super.render(canvas);
 
-    var cellSize = GameConfig.cellSize;
-    var x = (column + 0.50) * cellSize;
-    var y = (row + 0.50) * cellSize;
+    var path = Path();
 
     if (isParked()) {
-      var path = Path();
-      path.moveTo(x + cellSize / 3, y);
-      path.lineTo(x, y + cellSize / 3);
-      path.lineTo(x - cellSize / 3, y);
-      path.lineTo(x, y - cellSize / 3);
+      path.moveTo(x + sideSize / 3, y);
+      path.lineTo(x, y + sideSize / 3);
+      path.lineTo(x - sideSize / 3, y);
+      path.lineTo(x, y - sideSize / 3);
       path.close();
-      canvas.drawPath(path, Paint()..color = Colors.black);
     } else {
-      var path = Path();
-      path.moveTo(x + vx * cellSize / 2, y + vy * cellSize / 2);
-      path.lineTo(x + vy * cellSize / 4, y + vx * cellSize / 4);
-      path.lineTo(x - vy * cellSize / 4, y - vx * cellSize / 4);
+      path.moveTo(x + vx * sideSize / 2, y + vy * sideSize / 2);
+      path.lineTo(x + vy * sideSize / 4, y + vx * sideSize / 4);
+      path.lineTo(x - vy * sideSize / 4, y - vx * sideSize / 4);
       path.close();
-      canvas.drawPath(path, Paint()..color = Colors.black);
     }
+
+    canvas.drawPath(path, Paint()..color = Colors.black);
   }
 }

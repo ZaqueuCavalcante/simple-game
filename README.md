@@ -10,3 +10,10 @@
 - [ ] Create cell selector to add then into grid
 - [ ] Create way to remove cell from grid (only rocks make sense?)
 - [ ] Add portal cells?
+- [ ] Enable change game settings in runtime (show or not things)
+
+
+## References
+- [Demonstrando algoritmo A* (Pathfinding)](https://youtu.be/s29WpBi2exw)
+
+

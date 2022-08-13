@@ -1,9 +1,9 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:snake_game/game_config.dart';
-import 'main.dart';
+import 'simple_game.dart';
 
-class Scoreboard extends PositionComponent with HasGameRef<SnakeGame> {
+class Scoreboard extends PositionComponent with HasGameRef<SimpleGame> {
   int score = 0;
   int rocks = 0;
 

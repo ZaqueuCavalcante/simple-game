@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-
 import '../game_config.dart';
 import 'cell.dart';
 
 class AppleCell extends Cell with Pushable {
   double life = 1.00;
+
+  static double cellSize = GameConfig.cellSize;
 
   AppleCell(int row, int column) : super(row, column, Colors.red);
 
@@ -26,23 +27,10 @@ class AppleCell extends Cell with Pushable {
     super.render(canvas);
 
     if (GameConfig.appleIsDeadly) {
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset(x, y),
-          width: sideSize,
-          height: sideSize,
-        ),
-        Paint()
-          ..color = Colors.grey
-          ..style = PaintingStyle.fill,
-      );
+      renderCell(canvas, Colors.grey);
 
       canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset(x, y),
-          width: life * sideSize,
-          height: life * sideSize,
-        ),
+        Rect.fromLTWH(0, 0, life * cellSize, life * cellSize),
         Paint()
           ..color = color
           ..style = PaintingStyle.fill,

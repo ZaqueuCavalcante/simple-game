@@ -24,7 +24,7 @@ class Scoreboard extends PositionComponent with HasGameRef<SimpleGame> {
     TextPaint textPaint = TextPaint(
       style: const TextStyle(
         color: Colors.white,
-        fontSize: 50.0,
+        fontSize: 30.0,
         fontWeight: FontWeight.bold,
         fontFamily: 'Awesome Font',
       ),

@@ -1,11 +1,12 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:snake_game/game_config.dart';
-
 import 'cell.dart';
 
 class RockCell extends Cell with Unpushable {
   int collisions = 0;
+
+  static double cellSize = GameConfig.cellSize;
 
   RockCell(int row, int column) : super(row, column, Colors.brown);
 
@@ -24,8 +25,8 @@ class RockCell extends Cell with Unpushable {
     super.render(canvas);
 
     if (GameConfig.rockIsDeadly) {
-      var x = (column + 0.35) * sideSize;
-      var y = (row + 0.25) * sideSize;
+      var x = 0.35 * cellSize;
+      var y = 0.25 * cellSize;
 
       TextPaint textPaint = TextPaint(
         style: const TextStyle(

@@ -8,33 +8,33 @@ class Cell extends PositionComponent with HasGameRef<SimpleGame> {
   int column = 0;
   Color color = Colors.white;
 
-  Cell(this.row, this.column, this.color);
+  static double cellSize = GameConfig.cellSize;
 
-  @override
-  double get x => (column + 0.50) * GameConfig.cellSize;
-
-  @override
-  double get y => (row + 0.50) * GameConfig.cellSize;
-
-  double get sideSize => GameConfig.cellSize;
-
-  @override
-  Future<void> onLoad() async {
-    super.onLoad();
+  Cell(this.row, this.column, this.color) {
+    position = Vector2(column * cellSize, row * cellSize);
+    size = Vector2(cellSize, cellSize);
   }
 
   @override
-  void render(Canvas canvas) {
+  double get x => (0) * cellSize;
+
+  @override
+  double get y => (0) * cellSize;
+
+  double get sideSize => cellSize;  // REMOVE THIS
+
+  void renderCell(Canvas canvas, Color color) {
     canvas.drawRect(
-      Rect.fromCenter(
-        center: Offset(x, y),
-        width: sideSize,
-        height: sideSize,
-      ),
+      Rect.fromLTWH(0, 0, cellSize, cellSize),
       Paint()
         ..color = color
         ..style = PaintingStyle.fill,
     );
+  }
+
+  @override
+  void render(Canvas canvas) {
+    renderCell(canvas, color);
   }
 }
 

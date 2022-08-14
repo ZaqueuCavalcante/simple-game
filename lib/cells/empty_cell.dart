@@ -1,15 +1,20 @@
 import 'package:flame/components.dart';
+import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
-
 import '../game_config.dart';
 import 'cell.dart';
 
-class EmptyCell extends Cell with Pushable, Comparable {
+class EmptyCell extends Cell with Pushable, Comparable, Tappable {
   int G = 0;
   int H = 0;
   EmptyCell? parentCell;
+  bool wasTaped = false;
 
-  EmptyCell(int row, int column) : super(row, column, Colors.grey);
+  GameConfig configs;
+
+  static double cellSize = GameConfig.cellSize;
+
+  EmptyCell(int row, int column, this.configs) : super(row, column, Colors.grey);
 
   int get F => G + H;
 
@@ -20,40 +25,35 @@ class EmptyCell extends Cell with Pushable, Comparable {
   }
 
   @override
+  bool onTapUp(TapUpInfo info) {
+    wasTaped = !wasTaped;
+    return true;
+  }
+
+  @override
   void render(Canvas canvas) {
     super.render(canvas);
 
     if (GameConfig.renderVisitedCellsInPathfinding && F > 0) {
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset(x, y),
-          width: sideSize,
-          height: sideSize,
-        ),
-        Paint()
-          ..color = Colors.blue
-          ..style = PaintingStyle.fill,
-      );
+      renderCell(canvas, Colors.blue);
     }
 
-    if (GameConfig.renderCellsCosts) {
-      var delta = 0.20 * sideSize;
-
+    if (configs.renderCellsCosts) {
       TextPaint textPaint = TextPaint(
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 10.0,
+          fontSize: GameConfig.cellSize/5,
           fontWeight: FontWeight.bold,
           fontFamily: 'Awesome Font',
         ),
       );
 
-      textPaint.render(
-          canvas, F.toString(), Vector2(x - delta / 2, y - 1.50 * delta));
-      textPaint.render(
-          canvas, G.toString(), Vector2(x - 2 * delta, y + 0.50 * delta));
-      textPaint.render(
-          canvas, H.toString(), Vector2(x + 0.50 * delta, y + 0.50 * delta));
+      textPaint.render(canvas, F.toString(),
+          Vector2(x + 0.35 * cellSize, y + 0.20 * cellSize));
+      textPaint.render(canvas, G.toString(),
+          Vector2(x + 0.10 * cellSize, y + 0.60 * cellSize));
+      textPaint.render(canvas, H.toString(),
+          Vector2(x + 0.55 * cellSize, y + 0.60 * cellSize));
     }
   }
 

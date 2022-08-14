@@ -1,12 +1,13 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
-
+import '../game_config.dart';
 import 'cell.dart';
 
 class PlayerCell extends Cell with Unpushable {
   int vx = 1;
   int vy = 0;
+
+  static double cellSize = GameConfig.cellSize;
 
   PlayerCell(int row, int column) : super(row, column, Colors.greenAccent);
 
@@ -67,6 +68,14 @@ class PlayerCell extends Cell with Unpushable {
     }
   }
 
+  void goToRandomly() {
+    if (Random().nextBool()) {
+      goToLeftOrRightRandomly();
+    } else {
+      goToUpOrDownRandomly();
+    }
+  }
+
   @override
   void update(double dt) {
     super.update(dt);
@@ -81,16 +90,19 @@ class PlayerCell extends Cell with Unpushable {
 
     var path = Path();
 
+    var x = cellSize/2;
+    var y = cellSize/2;
+
     if (isParked()) {
-      path.moveTo(x + sideSize / 3, y);
-      path.lineTo(x, y + sideSize / 3);
-      path.lineTo(x - sideSize / 3, y);
-      path.lineTo(x, y - sideSize / 3);
+      path.moveTo(x + cellSize / 3, y);
+      path.lineTo(x, y + cellSize / 3);
+      path.lineTo(x - cellSize / 3, y);
+      path.lineTo(x, y - cellSize / 3);
       path.close();
     } else {
-      path.moveTo(x + vx * sideSize / 2, y + vy * sideSize / 2);
-      path.lineTo(x + vy * sideSize / 4, y + vx * sideSize / 4);
-      path.lineTo(x - vy * sideSize / 4, y - vx * sideSize / 4);
+      path.moveTo(x + vx * cellSize / 2, y + vy * cellSize / 2);
+      path.lineTo(x + vy * cellSize / 4, y + vx * cellSize / 4);
+      path.lineTo(x - vy * cellSize / 4, y - vx * cellSize / 4);
       path.close();
     }
 

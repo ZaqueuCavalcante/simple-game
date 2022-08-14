@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:flame/game.dart';
-import 'package:flutter/material.dart';
 import 'package:snake_game/game_config.dart';
 import 'cells/apple_cell.dart';
 import 'cells/cell.dart';
@@ -11,8 +10,9 @@ import 'cells/check_cell.dart';
 import 'cells/empty_cell.dart';
 import 'cells/player_cell.dart';
 import 'cells/rock_cell.dart';
+import 'cells_path.dart';
 import 'grids/cell_index.dart';
-import 'grids/lines.dart';
+import 'grids/grid.dart';
 import 'scoreboard.dart';
 
 class SimpleGame extends FlameGame with HasTappables {
@@ -23,135 +23,41 @@ class SimpleGame extends FlameGame with HasTappables {
   PlayerCell player = PlayerCell(1, 1);
   late AppleCell apple;
 
-  List<EmptyCell> path = <EmptyCell>[];
+  late CellsPath path = CellsPath(configs);
 
   Scoreboard scoreboard = Scoreboard();
 
-  static Lines grid = Lines();
+  static Grid grid = Grid();
 
   @override
   Future<void> onLoad() async {
     await super.onLoad();
 
-    board = List.generate(GameConfig.rows, (row) {
-      return List.generate(GameConfig.columns, (column) {
-        return CellStack(EmptyCell(row, column, configs));
-      });
-    });
-
-    for (int row = 0; row < GameConfig.rows; row++) {
-      for (int column = 0; column < GameConfig.columns; column++) {
-        add(board[row][column]);
-      }
-    }
+    loadEmptyCellsBoard();
 
     addCellOnTop(player);
     addRandomApple();
 
+    add(grid);
+
+    add(path);
+
     add(CheckCell(GameConfig.rows + 1, 0, configs));
 
-    add(grid);
+    add(scoreboard);
   }
 
   @override
   void update(double dt) {
     super.update(dt);
 
-    // Calculate costs
-    for (int row = 0; row < GameConfig.rows; row++) {
-      for (int column = 0; column < GameConfig.columns; column++) {
-        var cell = cellAtBottom(row, column) as EmptyCell;
-        cell.resetCostsAndParent();
-      }
-    }
-
-    int playerRow = player.row;
-    int playerColumn = player.column;
-
-    int appleRow = apple.row;
-    int appleColumn = apple.column;
-
-    var startCell = cellAtBottom(playerRow, playerColumn) as EmptyCell;
-    var endCell = cellAtBottom(appleRow, appleColumn) as EmptyCell;
-
-    var openedList = PriorityQueue<EmptyCell>();
-    var closedList = <EmptyCell>[];
-
-    openedList.add(startCell);
-
-    while (true) {
-      if (openedList.isEmpty) {
-        break;
-      }
-
-      var currentCell = openedList.removeFirst();
-      closedList.add(currentCell);
-
-      if (currentCell == endCell) {
-        break;
-      }
-
-      var row = currentCell.row;
-      var column = currentCell.column;
-
-      bool upIsOut = row == 0;
-      bool leftIsOut = column == 0;
-      bool rightIsOut = column == GameConfig.columns - 1;
-      bool downIsOut = row == GameConfig.rows - 1;
-
-      var up = upIsOut ? RockCell(-1, -1) : cellAtTop(row - 1, column);
-      var left = leftIsOut ? RockCell(-1, -1) : cellAtTop(row, column - 1);
-      var right = rightIsOut ? RockCell(-1, -1) : cellAtTop(row, column + 1);
-      var down = downIsOut ? RockCell(-1, -1) : cellAtTop(row + 1, column);
-
-      List<EmptyCell> cellsAroundCurrentCell = <EmptyCell>[];
-      for (var topCell in [up, down, left, right]) {
-        if (topCell is EmptyCell) {
-          cellsAroundCurrentCell.add(topCell);
-        } else if (topCell is AppleCell) {
-          cellsAroundCurrentCell.add(endCell);
-        }
-      }
-
-      for (var cell in cellsAroundCurrentCell) {
-        if (!closedList.contains(cell)) {
-          if (!openedList.contains(cell)) {
-            cell.parentCell = currentCell;
-
-            cell.G = cell.parentCell!.G + 1;
-            cell.H =
-                (appleRow - cell.row).abs() + (appleColumn - cell.column).abs();
-
-            openedList.add(cell);
-          } else if (openedList.contains(cell) && currentCell.G + 1 < cell.G) {
-            cell.parentCell = currentCell;
-
-            cell.G = cell.parentCell!.G + 1;
-            cell.H =
-                (appleRow - cell.row).abs() + (appleColumn - cell.column).abs();
-          }
-        }
-      }
-    }
-
-    startCell.G = 1;
-
-    // Make path
-    path.clear();
-
-    if (endCell.parentCell != null) {
-      EmptyCell? pathCell = endCell;
-      while (pathCell != startCell) {
-        path.add(pathCell!);
-        pathCell = pathCell.parentCell;
-      }
-      path.add(startCell);
-      path = path.reversed.toList();
-    }
-
     if (player.isParked()) {
       return;
     }
+
+    resetEmptyCellsCosts();
+    setEmptyCellsParents();
+    path.make(startCell, endCell);
 
     followPath();
 
@@ -166,39 +72,72 @@ class SimpleGame extends FlameGame with HasTappables {
     sleep(Duration(milliseconds: configs.updateDelayInMilliseconds));
   }
 
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
+  void resetEmptyCellsCosts() {
+    for (int row = 0; row < GameConfig.rows; row++) {
+      for (int column = 0; column < GameConfig.columns; column++) {
+        var cell = cellAtBottom(row, column) as EmptyCell;
+        cell.resetCostsAndParent();
+      }
+    }
+  }
 
-    var cellSize = GameConfig.cellSize;
+  EmptyCell get startCell =>
+      cellAtBottom(player.row, player.column) as EmptyCell;
 
-    // Render path
-    Paint pathPaint = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4.00;
+  EmptyCell get endCell => cellAtBottom(apple.row, apple.column) as EmptyCell;
 
-    for (var index = 1; index < path.length - 1; index++) {
-      var cellA = path[index];
-      var cellB = path[index + 1];
+  void setEmptyCellsParents() {
+    var openedList = PriorityQueue<EmptyCell>();
+    var closedList = <EmptyCell>[];
+    openedList.add(startCell);
 
-      var xA = (cellA.column + 0.50) * cellSize;
-      var yA = (cellA.row + 0.50) * cellSize;
+    while (true) {
+      if (openedList.isEmpty) { break; }
 
-      var xB = (cellB.column + 0.50) * cellSize;
-      var yB = (cellB.row + 0.50) * cellSize;
+      var currentCell = openedList.removeFirst();
+      closedList.add(currentCell);
 
-      canvas.drawLine(
-        Offset(xA, yA),
-        Offset(xB, yB),
-        pathPaint,
-      );
+      if (currentCell == endCell) { break; }
 
-      canvas.drawCircle(Offset(xA, yA), cellSize / 15, pathPaint);
-      canvas.drawCircle(Offset(xB, yB), cellSize / 15, pathPaint);
+      var cellsAround = <EmptyCell>[];
+      for (var cell in cellsAroundThe(currentCell)) {
+        if (cell is EmptyCell) {
+          cellsAround.add(cell);
+        }
+        if (cell is AppleCell) {
+          cellsAround.add(endCell);
+        }
+      }
+
+      for (var cell in cellsAround) {
+        if (!closedList.contains(cell)) {
+          if (!openedList.contains(cell)) {
+            cell.parentCell = currentCell;
+            cell.calculateCosts(apple);
+            openedList.add(cell);
+          } else if (openedList.contains(cell) && currentCell.G + 1 < cell.G) {
+            cell.parentCell = currentCell;
+            cell.calculateCosts(apple);
+          }
+        }
+      }
     }
 
-    scoreboard.render(canvas);
+    startCell.G = 1; // Only for render as visited cell
+  }
+
+  void loadEmptyCellsBoard() {
+    board = List.generate(GameConfig.rows, (row) =>
+        List.generate(GameConfig.columns, (column) =>
+            CellStack(EmptyCell(row, column, configs))
+      ),
+    );
+
+    for (int row = 0; row < GameConfig.rows; row++) {
+      for (int column = 0; column < GameConfig.columns; column++) {
+        add(board[row][column]);
+      }
+    }
   }
 
   void addCellOnTop(Cell cell) {
@@ -218,7 +157,7 @@ class SimpleGame extends FlameGame with HasTappables {
     addCellOnTop(apple);
   }
 
-  // Calculate for always be find by player
+  // TODO: Calculate for always be find by player
   void addRandomApple() {
     List<CellIndex> emptyCells = <CellIndex>[];
     for (int row = 0; row < GameConfig.rows; row++) {
@@ -228,100 +167,116 @@ class SimpleGame extends FlameGame with HasTappables {
         }
       }
     }
-    var randomIndex = Random().nextInt(emptyCells.length);
-    var randomCell = emptyCells[randomIndex];
+    if (emptyCells.isNotEmpty) {
+      var randomIndex = Random().nextInt(emptyCells.length);
+      var randomCell = emptyCells[randomIndex];
 
-    addAppleOnTop(randomCell.row, randomCell.column);
+      addAppleOnTop(randomCell.row, randomCell.column);
+    } else {
+      player.park();
+    }
+  }
+
+  Cell cellAtUpOf(Cell cell) {
+    bool upIsOut = cell.row == 0;
+    return upIsOut ? RockCell(-1, -1) : cellAtTop(cell.row - 1, cell.column);
+  }
+
+  Cell cellAtLeftOf(Cell cell) {
+    bool leftIsOut = cell.column == 0;
+    return leftIsOut ? RockCell(-1, -1) : cellAtTop(cell.row, cell.column - 1);
+  }
+
+  Cell cellAtRightOf(Cell cell) {
+    bool rightIsOut = cell.column == GameConfig.columns - 1;
+    return rightIsOut ? RockCell(-1, -1) : cellAtTop(cell.row, cell.column + 1);
+  }
+
+  Cell cellAtDownOf(Cell cell) {
+    bool downIsOut = cell.row == GameConfig.rows - 1;
+    return downIsOut ? RockCell(-1, -1) : cellAtTop(cell.row + 1, cell.column);
+  }
+
+  List<Cell> cellsAroundThe(Cell cell) {
+    var up = cellAtUpOf(cell);
+    var left = cellAtLeftOf(cell);
+    var right = cellAtRightOf(cell);
+    var down = cellAtDownOf(cell);
+    return [up, left, right, down];
   }
 
   void useCollisionsAvoider() {
-    int row = player.row;
-    int column = player.column;
+    var up = cellAtUpOf(player);
+    var left = cellAtLeftOf(player);
+    var right = cellAtRightOf(player);
+    var down = cellAtDownOf(player);
 
-    bool upIsOut = row == 0;
-    bool leftIsOut = column == 0;
-    bool rightIsOut = column == GameConfig.columns - 1;
-    bool downIsOut = row == GameConfig.rows - 1;
-
-    var up = upIsOut ? RockCell(-1, -1) : cellAtTop(row - 1, column);
-    var left = leftIsOut ? RockCell(-1, -1) : cellAtTop(row, column - 1);
-    var right = rightIsOut ? RockCell(-1, -1) : cellAtTop(row, column + 1);
-    var down = downIsOut ? RockCell(-1, -1) : cellAtTop(row + 1, column);
-
-    if (player.isGoingToUp()) {
-      if (up is Unpushable) {
-        if (up is RockCell) {
-          up.saveCollision();
-        }
-        if (left is Pushable && right is Pushable) {
-          player.goToLeftOrRightRandomly();
+    if (player.isGoingToUp() && up is Unpushable) {
+      if (up is RockCell) {
+        up.saveCollision();
+      }
+      if (left is Pushable && right is Pushable) {
+        player.goToLeftOrRightRandomly();
+      } else {
+        if (left is Pushable) {
+          player.goToLeft();
+        } else if (right is Pushable) {
+          player.goToRight();
+        } else if (down is Pushable) {
+          player.goToDown();
         } else {
-          if (left is Pushable) {
-            player.goToLeft();
-          } else if (right is Pushable) {
-            player.goToRight();
-          } else if (down is Pushable) {
-            player.goToDown();
-          } else {
-            player.park();
-          }
+          player.park();
         }
       }
-    } else if (player.isGoingToDown()) {
-      if (down is Unpushable) {
-        if (down is RockCell) {
-          down.saveCollision();
-        }
-        if (left is Pushable && right is Pushable) {
-          player.goToLeftOrRightRandomly();
+    } else if (player.isGoingToDown() && down is Unpushable) {
+      if (down is RockCell) {
+        down.saveCollision();
+      }
+      if (left is Pushable && right is Pushable) {
+        player.goToLeftOrRightRandomly();
+      } else {
+        if (left is Pushable) {
+          player.goToLeft();
+        } else if (right is Pushable) {
+          player.goToRight();
+        } else if (up is Pushable) {
+          player.goToUp();
         } else {
-          if (left is Pushable) {
-            player.goToLeft();
-          } else if (right is Pushable) {
-            player.goToRight();
-          } else if (up is Pushable) {
-            player.goToUp();
-          } else {
-            player.park();
-          }
+          player.park();
         }
       }
-    } else if (player.isGoingToLeft()) {
-      if (left is Unpushable) {
-        if (left is RockCell) {
-          left.saveCollision();
-        }
-        if (up is Pushable && down is Pushable) {
-          player.goToUpOrDownRandomly();
+    } else if (player.isGoingToLeft() && left is Unpushable) {
+      if (left is RockCell) {
+        left.saveCollision();
+      }
+      if (up is Pushable && down is Pushable) {
+        player.goToUpOrDownRandomly();
+      } else {
+        if (up is Pushable) {
+          player.goToUp();
+        } else if (down is Pushable) {
+          player.goToDown();
+        } else if (right is Pushable) {
+          player.goToRight();
         } else {
-          if (up is Pushable) {
-            player.goToUp();
-          } else if (down is Pushable) {
-            player.goToDown();
-          } else if (right is Pushable) {
-            player.goToRight();
-          } else {
-            player.park();
-          }
+          player.park();
         }
       }
-    } else if (player.isGoingToRight()) {
-      if (right is Unpushable) {
-        if (right is RockCell) {
-          right.saveCollision();
-        }
-        if (up is Pushable && down is Pushable) {
-          player.goToUpOrDownRandomly();
+    } else if (player.isGoingToRight() && right is Unpushable) {
+      if (right is RockCell) {
+        right.saveCollision();
+      }
+      if (up is Pushable && down is Pushable) {
+        player.goToUpOrDownRandomly();
+      } else {
+        if (up is Pushable) {
+          player.goToUp();
+        } else if (down is Pushable) {
+          player.goToDown();
+        } else if (left is Pushable) {
+          player.goToLeft();
         } else {
-          if (up is Pushable) {
-            player.goToUp();
-          } else if (down is Pushable) {
-            player.goToDown();
-          } else if (left is Pushable) {
-            player.goToLeft();
-          } else {
-            player.park();
-          }
+          player.park();
         }
       }
     }
@@ -380,28 +335,10 @@ class SimpleGame extends FlameGame with HasTappables {
   }
 
   void followPath() {
-    if (path.isEmpty) {
+    if (path.isEmpty()) {
       return;
     }
 
-    int playerRow = player.row;
-    int playerColumn = player.column;
-
-    int nextRow = path[1].row;
-    int nextColumn = path[1].column;
-
-    if (nextRow == playerRow) {
-      if (nextColumn > playerColumn) {
-        player.goToRight();
-      } else if (nextColumn < playerColumn) {
-        player.goToLeft();
-      }
-    } else {
-      if (nextRow > playerRow) {
-        player.goToDown();
-      } else if (nextRow < playerRow) {
-        player.goToUp();
-      }
-    }
+    player.goToNeighbor(path.cells[1]);
   }
 }

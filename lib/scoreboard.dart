@@ -7,16 +7,6 @@ class Scoreboard extends PositionComponent with HasGameRef<SimpleGame> {
   int score = 0;
   int rocks = 0;
 
-  Scoreboard();
-
-  void updateScore() {
-    score++;
-  }
-
-  void updateRocks(int value) {
-    rocks = value;
-  }
-
   @override
   void render(Canvas canvas) {
     super.render(canvas);
@@ -32,5 +22,13 @@ class Scoreboard extends PositionComponent with HasGameRef<SimpleGame> {
 
     textPaint.render(canvas, 'Score: $score', Vector2(50, 650));
     textPaint.render(canvas, 'Rocks: $rocks / ${GameConfig.maxRocks}', Vector2(50, 720));
+  }
+
+  void updateScore() {
+    score++;
+  }
+
+  void updateRocks(int value) {
+    rocks = value;
   }
 }

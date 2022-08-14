@@ -9,10 +9,6 @@ class AppleCell extends Cell with Pushable {
 
   AppleCell(int row, int column) : super(row, column, Colors.red);
 
-  bool isDead() {
-    return life < 0.00;
-  }
-
   @override
   void update(double dt) {
     super.update(dt);
@@ -36,5 +32,9 @@ class AppleCell extends Cell with Pushable {
           ..style = PaintingStyle.fill,
       );
     }
+  }
+
+  bool isDead() {
+    return life < 0.00;
   }
 }

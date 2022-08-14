@@ -11,6 +11,39 @@ class PlayerCell extends Cell with Unpushable {
 
   PlayerCell(int row, int column) : super(row, column, Colors.greenAccent);
 
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    row = row + vy;
+    column = column + vx;
+  }
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+
+    var path = Path();
+
+    var x = cellSize/2;
+    var y = cellSize/2;
+
+    if (isParked()) {
+      path.moveTo(x + cellSize / 3, y);
+      path.lineTo(x, y + cellSize / 3);
+      path.lineTo(x - cellSize / 3, y);
+      path.lineTo(x, y - cellSize / 3);
+      path.close();
+    } else {
+      path.moveTo(x + vx * cellSize / 2, y + vy * cellSize / 2);
+      path.lineTo(x + vy * cellSize / 4, y + vx * cellSize / 4);
+      path.lineTo(x - vy * cellSize / 4, y - vx * cellSize / 4);
+      path.close();
+    }
+
+    canvas.drawPath(path, Paint()..color = Colors.black);
+  }
+
   bool isOn(int row, int column) {
     return this.row == row && this.column == column;
   }
@@ -76,36 +109,22 @@ class PlayerCell extends Cell with Unpushable {
     }
   }
 
-  @override
-  void update(double dt) {
-    super.update(dt);
+  void goToNeighbor(Cell cell) {
+    int nextRow = cell.row;
+    int nextColumn = cell.column;
 
-    row = row + vy;
-    column = column + vx;
-  }
-
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-
-    var path = Path();
-
-    var x = cellSize/2;
-    var y = cellSize/2;
-
-    if (isParked()) {
-      path.moveTo(x + cellSize / 3, y);
-      path.lineTo(x, y + cellSize / 3);
-      path.lineTo(x - cellSize / 3, y);
-      path.lineTo(x, y - cellSize / 3);
-      path.close();
+    if (nextRow == row) {
+      if (nextColumn > column) {
+        goToRight();
+      } else if (nextColumn < column) {
+        goToLeft();
+      }
     } else {
-      path.moveTo(x + vx * cellSize / 2, y + vy * cellSize / 2);
-      path.lineTo(x + vy * cellSize / 4, y + vx * cellSize / 4);
-      path.lineTo(x - vy * cellSize / 4, y - vx * cellSize / 4);
-      path.close();
+      if (nextRow > row) {
+        goToDown();
+      } else if (nextRow < row) {
+        goToUp();
+      }
     }
-
-    canvas.drawPath(path, Paint()..color = Colors.black);
   }
 }

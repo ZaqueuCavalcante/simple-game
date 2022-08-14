@@ -1,12 +1,12 @@
 class GameConfig {
   // Never change after start game
-  static const int rows = 20;
-  static const int columns = 13;
-  static const double cellSize = 30.00;
-  static const int maxRocks = (rows - 2) * (columns - 2) - 1;
+  static const int rows = 10;
+  static const int columns = 8;
+  static const double cellSize = 48.00;
+  static const int maxRocks = rows * columns - 1;
   static const bool addInitialObstacles = true;
 
-  int updateDelayInMilliseconds = 5;
+  int updateDelayInMilliseconds = 0;
 
   static const bool followTheSpiderSenseWhenPathIsNotFound = true;
   static const bool pushObstacleOnEatApple = true;
@@ -15,8 +15,8 @@ class GameConfig {
 
   // Settings for render things or not
   bool renderCellsCosts = false;
-  static const bool renderVisitedCellsInPathfinding = true;
-  static const bool showBordersIndex = true;
+  bool renderPath = false;
+  static const bool renderVisitedCellsInPathfinding = false;
 
   // Apple cell settings
   static const bool appleIsDeadly = false;
@@ -24,5 +24,5 @@ class GameConfig {
 
   // Rock cell settings
   static const bool rockIsDeadly = true;
-  static const int rockMaxCollisions = 0;
+  static const int rockMaxCollisions = 1;
 }

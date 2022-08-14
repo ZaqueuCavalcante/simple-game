@@ -21,42 +21,15 @@ class CellStack extends PositionComponent
     _queue.addLast(cell);
   }
 
-  int get length => _queue.length;
-
-  bool get isEmpty => _queue.isEmpty;
-
-  bool get isNotEmpty => _queue.isNotEmpty;
-
-  void push(final Cell cell) => _queue.addLast(cell);
-
-  Cell top() {
-    if (isEmpty) {
-      throw StateError("Cannot top() on empty stack.");
-    }
-    return _queue.last;
-  }
-
-  Cell pop() {
-    if (isEmpty) {
-      throw StateError("Cannot pop() on empty stack.");
-    }
-    return _queue.removeLast();
-  }
-
-  Cell bottom() {
-    if (isEmpty) {
-      throw StateError("Cannot bottom() on empty stack.");
-    }
-    return _queue.first;
-  }
-
   @override
   bool onTapUp(TapUpInfo info) {
     var topCell = top();
+
     if (topCell is EmptyCell) {
       push(RockCell(topCell.row, topCell.column));
       return true;
     }
+
     if (topCell is RockCell) {
       topCell.saveCollision();
       if (topCell.isDead()) {
@@ -66,9 +39,7 @@ class CellStack extends PositionComponent
     }
 
     if (topCell is PlayerCell) {
-      topCell.isParked()
-          ? topCell.goToRandomly()
-          : topCell.park();
+      topCell.isParked() ? topCell.goToRandomly() : topCell.park();
       return true;
     }
 
@@ -81,4 +52,12 @@ class CellStack extends PositionComponent
       cell.render(canvas);
     }
   }
+
+  void push(final Cell cell) => _queue.addLast(cell);
+
+  Cell top() => _queue.last;
+
+  Cell pop() => _queue.removeLast();
+
+  Cell bottom() => _queue.first;
 }

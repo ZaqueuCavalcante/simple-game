@@ -15,14 +15,6 @@ class Cell extends PositionComponent with HasGameRef<SimpleGame> {
     size = Vector2(cellSize, cellSize);
   }
 
-  @override
-  double get x => (0) * cellSize;
-
-  @override
-  double get y => (0) * cellSize;
-
-  double get sideSize => cellSize;  // REMOVE THIS
-
   void renderCell(Canvas canvas, Color color) {
     canvas.drawRect(
       Rect.fromLTWH(0, 0, cellSize, cellSize),

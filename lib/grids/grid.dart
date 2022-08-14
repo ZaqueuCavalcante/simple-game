@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../game_config.dart';
 import '../simple_game.dart';
 
-class Lines extends PositionComponent with HasGameRef<SimpleGame> {
+class Grid extends PositionComponent with HasGameRef<SimpleGame> {
   static Paint paint = Paint()
     ..color = Colors.white
     ..style = PaintingStyle.stroke

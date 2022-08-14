@@ -6,10 +6,12 @@ import 'cell.dart';
 
 class CheckCell extends Cell with Tappable {
   bool check = false;
-
   GameConfig configs;
 
-  CheckCell(int row, int column, this.configs) : super(row, column, Colors.orange);
+  static double cellSize = GameConfig.cellSize;
+
+  CheckCell(int row, int column, this.configs)
+      : super(row, column, Colors.orange);
 
   @override
   bool onTapUp(TapUpInfo info) {
@@ -33,8 +35,9 @@ class CheckCell extends Cell with Tappable {
       ),
     );
 
-    textPaint.render(canvas, text, Vector2(0.20 * sideSize, 0.20 * sideSize));
+    textPaint.render(canvas, text, Vector2(0.20 * cellSize, 0.20 * cellSize));
 
-    textPaint.render(canvas, 'Render cells costs', Vector2(1.20 * sideSize, 0.20 * sideSize));
+    textPaint.render(canvas, 'Render cells costs',
+        Vector2(1.20 * cellSize, 0.20 * cellSize));
   }
 }

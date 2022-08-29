@@ -4,10 +4,8 @@ import '../game_config.dart';
 import 'cell.dart';
 
 class PlayerCell extends Cell with Unpushable {
-  int vx = 1;
+  int vx = 0;
   int vy = 0;
-
-  static double cellSize = GameConfig.cellSize;
 
   PlayerCell(int row, int column) : super(row, column, Colors.greenAccent);
 

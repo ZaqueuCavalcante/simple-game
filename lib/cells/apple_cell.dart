@@ -5,8 +5,6 @@ import 'cell.dart';
 class AppleCell extends Cell with Pushable {
   double life = 1.00;
 
-  static double cellSize = GameConfig.cellSize;
-
   AppleCell(int row, int column) : super(row, column, Colors.red);
 
   @override

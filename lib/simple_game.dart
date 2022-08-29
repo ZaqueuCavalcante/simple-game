@@ -1,33 +1,39 @@
 import 'dart:io';
 import 'dart:math';
 import 'package:collection/collection.dart';
+import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:snake_game/game_config.dart';
 import 'cells/apple_cell.dart';
 import 'cells/cell.dart';
 import 'cells/cell_stack.dart';
-import 'cells/check_cell.dart';
+import 'cells/drag_cell.dart';
 import 'cells/empty_cell.dart';
 import 'cells/player_cell.dart';
+import 'cells/portal_cell.dart';
 import 'cells/rock_cell.dart';
 import 'cells_path.dart';
 import 'grids/cell_index.dart';
 import 'grids/grid.dart';
 import 'scoreboard.dart';
 
-class SimpleGame extends FlameGame with HasTappables {
+class SimpleGame extends FlameGame with HasTappables, HasDraggables {
   GameConfig configs = GameConfig();
 
   late List<List<CellStack>> board;
 
-  PlayerCell player = PlayerCell(1, 1);
+  PlayerCell player = PlayerCell(3, 3);
   late AppleCell apple;
+  late PortalCell startPortal;
+  late PortalCell endPortal;
 
   late CellsPath path = CellsPath(configs);
 
   Scoreboard scoreboard = Scoreboard();
 
   static Grid grid = Grid();
+
+  DragCell dragCell = DragCell(10, 5);
 
   @override
   Future<void> onLoad() async {
@@ -36,15 +42,24 @@ class SimpleGame extends FlameGame with HasTappables {
     loadEmptyCellsBoard();
 
     addCellOnTop(player);
+
+    startPortal = PortalCell(GameConfig.rows - 1, GameConfig.columns - 1);
+    endPortal = PortalCell(0, 0);
+
+    // Quando n achar a comida, procurar portal e ir até ele
+
     addRandomApple();
 
     add(grid);
 
     add(path);
 
-    add(CheckCell(GameConfig.rows + 1, 0, configs));
-
     add(scoreboard);
+
+    add(dragCell);
+
+    add(startPortal);
+    add(endPortal);
   }
 
   @override
@@ -69,7 +84,7 @@ class SimpleGame extends FlameGame with HasTappables {
 
     updateRocks();
 
-    sleep(Duration(milliseconds: configs.updateDelayInMilliseconds));
+    //sleep(Duration(milliseconds: configs.updateDelayInMilliseconds));
   }
 
   void resetEmptyCellsCosts() {
@@ -290,17 +305,61 @@ class SimpleGame extends FlameGame with HasTappables {
 
     var newRow = player.row;
     var newColumn = player.column;
+    var isStartPortal = newRow == startPortal.row && newColumn == startPortal.column;
+    var isEndPortal = newRow == endPortal.row && newColumn == endPortal.column;
 
-    if (cellAtTop(newRow, newColumn) is EmptyCell) {
+    if (isStartPortal) {
+      player.row = endPortal.row;
+      player.column = endPortal.column;
+      board[endPortal.row][endPortal.column].push(board[oldRow][oldColumn].pop());
+      return;
+    } else if (isEndPortal) {
+      player.row = startPortal.row;
+      player.column = startPortal.column;
+      board[startPortal.row][startPortal.column].push(board[oldRow][oldColumn].pop());
+      return;
+    }
+
+
+    var newCell = cellAtTop(newRow, newColumn);
+
+    if (newCell is EmptyCell) {
+      if (isStartPortal) {
+        player.row = endPortal.row;
+        player.column = endPortal.column;
+        board[endPortal.row][endPortal.column].push(board[oldRow][oldColumn].pop());
+        return;
+      }
+      if (isEndPortal) {
+        player.row = startPortal.row;
+        player.column = startPortal.column;
+        board[startPortal.row][startPortal.column].push(board[oldRow][oldColumn].pop());
+        return;
+      }
+
       board[newRow][newColumn].push(board[oldRow][oldColumn].pop());
-    } else if (cellAtTop(newRow, newColumn) is AppleCell) {
+    }
+    else if (newCell is AppleCell) {
       board[newRow][newColumn].pop();
 
       if (GameConfig.pushObstacleOnEatApple) {
         addCellOnTop(RockCell(newRow, newColumn));
       }
 
-      board[newRow][newColumn].push(board[oldRow][oldColumn].pop());
+      if (isStartPortal) {
+        player.row = endPortal.row;
+        player.column = endPortal.column;
+        board[endPortal.row][endPortal.column].push(board[oldRow][oldColumn].pop());
+      }
+      if (isEndPortal) {
+        player.row = startPortal.row;
+        player.column = startPortal.column;
+        board[startPortal.row][startPortal.column].push(board[oldRow][oldColumn].pop());
+      }
+      if (!isStartPortal && !isEndPortal) {
+        board[newRow][newColumn].push(board[oldRow][oldColumn].pop());
+      }
+
       addRandomApple();
 
       scoreboard.updateScore();

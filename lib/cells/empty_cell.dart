@@ -11,8 +11,6 @@ class EmptyCell extends Cell with Pushable, Comparable {
 
   GameConfig configs;
 
-  static double cellSize = GameConfig.cellSize;
-
   EmptyCell(int row, int column, this.configs)
       : super(row, column, Colors.grey);
 

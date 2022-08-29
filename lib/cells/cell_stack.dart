@@ -9,8 +9,7 @@ import '../simple_game.dart';
 import 'cell.dart';
 import 'player_cell.dart';
 
-class CellStack extends PositionComponent
-    with HasGameRef<SimpleGame>, Tappable {
+class CellStack extends PositionComponent with HasGameRef<SimpleGame>, Tappable {
   final Queue<Cell> _queue;
 
   static double cellSize = GameConfig.cellSize;
@@ -25,18 +24,18 @@ class CellStack extends PositionComponent
   bool onTapUp(TapUpInfo info) {
     var topCell = top();
 
-    if (topCell is EmptyCell) {
-      push(RockCell(topCell.row, topCell.column));
-      return true;
-    }
-
-    if (topCell is RockCell) {
-      topCell.saveCollision();
-      if (topCell.isDead()) {
-        pop();
-      }
-      return true;
-    }
+    // if (topCell is EmptyCell) {
+    //   push(RockCell(topCell.row, topCell.column));
+    //   return true;
+    // }
+    //
+    // if (topCell is RockCell) {
+    //   topCell.saveCollision();
+    //   if (topCell.isDead()) {
+    //     pop();
+    //   }
+    //   return true;
+    // }
 
     if (topCell is PlayerCell) {
       topCell.isParked() ? topCell.goToRandomly() : topCell.park();

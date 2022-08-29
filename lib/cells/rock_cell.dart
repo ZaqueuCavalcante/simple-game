@@ -6,8 +6,6 @@ import 'cell.dart';
 class RockCell extends Cell with Unpushable {
   int collisions = 0;
 
-  static double cellSize = GameConfig.cellSize;
-
   RockCell(int row, int column) : super(row, column, Colors.brown);
 
   @override

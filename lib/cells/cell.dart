@@ -8,7 +8,7 @@ class Cell extends PositionComponent with HasGameRef<SimpleGame> {
   int column = 0;
   Color color = Colors.white;
 
-  static double cellSize = GameConfig.cellSize;
+  double cellSize = GameConfig.cellSize;
 
   Cell(this.row, this.column, this.color) {
     position = Vector2(column * cellSize, row * cellSize);

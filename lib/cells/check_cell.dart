@@ -8,8 +8,6 @@ class CheckCell extends Cell with Tappable {
   bool check = false;
   GameConfig configs;
 
-  static double cellSize = GameConfig.cellSize;
-
   CheckCell(int row, int column, this.configs)
       : super(row, column, Colors.orange);
 

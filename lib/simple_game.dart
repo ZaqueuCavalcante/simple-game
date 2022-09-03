@@ -1,13 +1,12 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:collection/collection.dart';
-import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:snake_game/game_config.dart';
 import 'cells/apple_cell.dart';
 import 'cells/cell.dart';
 import 'cells/cell_stack.dart';
-import 'cells/drag_cell.dart';
 import 'cells/empty_cell.dart';
 import 'cells/player_cell.dart';
 import 'cells/portal_cell.dart';
@@ -33,8 +32,6 @@ class SimpleGame extends FlameGame with HasTappables, HasDraggables {
 
   static Grid grid = Grid();
 
-  DragCell dragCell = DragCell(10, 5);
-
   @override
   Future<void> onLoad() async {
     await super.onLoad();
@@ -55,8 +52,6 @@ class SimpleGame extends FlameGame with HasTappables, HasDraggables {
     add(path);
 
     add(scoreboard);
-
-    add(dragCell);
 
     add(startPortal);
     add(endPortal);
@@ -84,7 +79,7 @@ class SimpleGame extends FlameGame with HasTappables, HasDraggables {
 
     updateRocks();
 
-    //sleep(Duration(milliseconds: configs.updateDelayInMilliseconds));
+    sleep(Duration(milliseconds: configs.updateDelayInMilliseconds));
   }
 
   void resetEmptyCellsCosts() {

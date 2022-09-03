@@ -6,7 +6,7 @@ class GameConfig {
   static const int maxRocks = rows * columns - 1;
   static const bool addInitialObstacles = true;
 
-  int updateDelayInMilliseconds = 500;
+  int updateDelayInMilliseconds = 100;
 
   static const bool followTheSpiderSenseWhenPathIsNotFound = true;
   static const bool pushObstacleOnEatApple = true;

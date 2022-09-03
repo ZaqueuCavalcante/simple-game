@@ -7,6 +7,17 @@ class Scoreboard extends PositionComponent with HasGameRef<SimpleGame> {
   int score = 0;
   int rocks = 0;
 
+  late Timer interval;
+  int elapsedSecs = 0;
+
+  Scoreboard() {
+    interval = Timer(
+      1,
+      onTick: () => elapsedSecs += 1,
+      repeat: true,
+    );
+  }
+
   @override
   void render(Canvas canvas) {
     super.render(canvas);
@@ -20,8 +31,14 @@ class Scoreboard extends PositionComponent with HasGameRef<SimpleGame> {
       ),
     );
 
-    textPaint.render(canvas, 'Score: $score', Vector2(50, 650));
-    textPaint.render(canvas, 'Rocks: $rocks / ${GameConfig.maxRocks}', Vector2(50, 720));
+    textPaint.render(canvas, 'Score: $score', Vector2(50, 550));
+    textPaint.render(canvas, 'Rocks: $rocks / ${GameConfig.maxRocks}', Vector2(50, 600));
+    textPaint.render(canvas, 'Time: $elapsedSecs', Vector2(50, 650));
+  }
+
+  @override
+  void update(double dt) {
+    interval.update(dt);
   }
 
   void updateScore() {

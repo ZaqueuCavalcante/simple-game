@@ -25,17 +25,12 @@ class PortalCell extends Cell with Pushable, draggable.Draggable {
   @override
   bool onDragStart(DragStartInfo info) {
     dragDeltaPosition = info.eventPosition.game - position;
-    print('DRAG START');
     return false;
   }
 
   @override
   bool onDragUpdate(DragUpdateInfo info) {
     final dragDeltaPosition = this.dragDeltaPosition;
-    print('DRAG UPDATE');
-    print('row=$row - column=$column');
-    print('position=$position');
-    print('dragDeltaPosition=$dragDeltaPosition');
     if (dragDeltaPosition == null) {
       return false;
     }
@@ -63,14 +58,12 @@ class PortalCell extends Cell with Pushable, draggable.Draggable {
   @override
   bool onDragEnd(DragEndInfo info) {
     dragDeltaPosition = null;
-    print('DRAG END');
     return false;
   }
 
   @override
   bool onDragCancel() {
     dragDeltaPosition = null;
-    print('DRAG CANCEL');
     return false;
   }
 }
